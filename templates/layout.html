@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}{% endblock %} • Legal Demystifier</title>
+  <meta name="description" content="AI-powered legal document simplification" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=League+Spartan:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏛️</text></svg>">
+</head>
+<body>
+  <header class="site-header glass">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">🏛️</span>
+      <span class="brand-name">Legal Demystifier</span>
+    </div>
+    <nav class="main-nav" aria-label="Main navigation">
+      <button id="themeToggle" class="icon-btn" aria-label="Toggle dark mode" title="Toggle theme">🌙</button>
+      <a class="nav-link" href="https://github.com/RedtRocks" target="_blank" rel="noopener" aria-label="GitHub">GitHub</a>
+    </nav>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer glass">
+    <p>Prototype – not legal advice. © {{ 2025 }}</p>
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

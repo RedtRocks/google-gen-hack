@@ -11,11 +11,18 @@ import requests
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
 from pydantic import BaseModel
 import PyPDF2
 from io import BytesIO
 import logging
 import re
+from dotenv import load_dotenv
+
+# Load environment variables from .env if present (dev convenience)
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,8 +32,12 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Legal Document Demystifier",
     description="AI-powered tool to simplify complex legal documents into clear, accessible guidance",
-    version="1.0.0"
+    version="1.1.0"
 )
+
+# Mount static files & templates
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 # Add CORS middleware
 app.add_middleware(
@@ -200,258 +211,9 @@ document_storage = {}
 # ==================== API ENDPOINTS ====================
 
 @app.get("/", response_class=HTMLResponse)
-async def root():
-    """Serve the main application page"""
-    html_content = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Legal Document Demystifier</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
-            .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-            h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
-            .upload-section { border: 2px dashed #3498db; padding: 30px; text-align: center; margin: 20px 0; border-radius: 10px; }
-            .form-group { margin: 15px 0; }
-            label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; }
-            select, textarea, input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-            button { background: #3498db; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-            button:hover { background: #2980b9; }
-            .results { margin-top: 30px; padding: 20px; background: #ecf0f1; border-radius: 10px; }
-            .section { margin: 20px 0; padding: 15px; background: white; border-radius: 5px; border-left: 4px solid #3498db; }
-            .risk { border-left-color: #e74c3c; }
-            .recommendation { border-left-color: #27ae60; }
-            .question-section { margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; }
-            .loading { text-align: center; color: #7f8c8d; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🏛️ Legal Document Demystifier</h1>
-            <p style="text-align: center; color: #7f8c8d; font-size: 18px;">
-                Upload your legal document and get clear, simple explanations in plain English
-            </p>
-            
-            <div class="upload-section">
-                <h3>📄 Upload Your Document</h3>
-                <form id="uploadForm" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <input type="file" id="fileInput" accept=".pdf,.txt,.doc,.docx" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Or paste your document text:</label>
-                        <textarea id="textInput" rows="6" placeholder="Paste your legal document text here..."></textarea>
-                    </div>
-                    
-                    <div style="display: flex; gap: 20px; margin: 20px 0;">
-                        <div class="form-group" style="flex: 1;">
-                            <label>Document Type:</label>
-                            <select id="documentType">
-                                <option value="contract">Contract</option>
-                                <option value="rental_agreement">Rental Agreement</option>
-                                <option value="loan_agreement">Loan Agreement</option>
-                                <option value="terms_of_service">Terms of Service</option>
-                                <option value="privacy_policy">Privacy Policy</option>
-                                <option value="employment_contract">Employment Contract</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group" style="flex: 1;">
-                            <label>Your Role:</label>
-                            <select id="userRole">
-                                <option value="individual">Individual/Consumer</option>
-                                <option value="business">Small Business Owner</option>
-                                <option value="tenant">Tenant/Renter</option>
-                                <option value="borrower">Borrower</option>
-                                <option value="employee">Employee</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group" style="flex: 1;">
-                            <label>Explanation Level:</label>
-                            <select id="complexityLevel">
-                                <option value="simple">Simple (No legal jargon)</option>
-                                <option value="detailed">Detailed (Some legal terms)</option>
-                                <option value="expert">Expert (Full legal context)</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <button type="submit">🔍 Analyze Document</button>
-                </form>
-            </div>
-            
-            <div id="results" style="display: none;"></div>
-            
-            <div id="questionSection" class="question-section" style="display: none;">
-                <h3>❓ Ask Questions About Your Document</h3>
-                <div class="form-group">
-                    <textarea id="questionInput" rows="3" placeholder="Ask any question about your document..."></textarea>
-                </div>
-                <button onclick="askQuestion()">Get Answer</button>
-                <div id="questionResults"></div>
-            </div>
-        </div>
-
-        <script>
-            let currentDocumentId = null;
-            let currentDocumentText = null;
-
-            document.getElementById('uploadForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const fileInput = document.getElementById('fileInput');
-                const textInput = document.getElementById('textInput').value;
-                const documentType = document.getElementById('documentType').value;
-                const userRole = document.getElementById('userRole').value;
-                const complexityLevel = document.getElementById('complexityLevel').value;
-                
-                if (!fileInput.files[0] && !textInput) {
-                    alert('Please upload a file or paste document text');
-                    return;
-                }
-                
-                const resultsDiv = document.getElementById('results');
-                resultsDiv.style.display = 'block';
-                resultsDiv.innerHTML = '<div class="loading">🔄 Analyzing your document... This may take a moment.</div>';
-                
-                try {
-                    let response;
-                    
-                    if (fileInput.files[0]) {
-                        const formData = new FormData();
-                        formData.append('file', fileInput.files[0]);
-                        formData.append('document_type', documentType);
-                        formData.append('user_role', userRole);
-                        formData.append('complexity_level', complexityLevel);
-                        
-                        response = await fetch('/analyze-document', {
-                            method: 'POST',
-                            body: formData
-                        });
-                    } else {
-                        response = await fetch('/analyze-text', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                text: textInput,
-                                document_type: documentType,
-                                user_role: userRole,
-                                complexity_level: complexityLevel
-                            })
-                        });
-                    }
-                    
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        currentDocumentId = result.document_id;
-                        currentDocumentText = textInput || 'Uploaded file content';
-                        displayResults(result);
-                        document.getElementById('questionSection').style.display = 'block';
-                    } else {
-                        resultsDiv.innerHTML = `<div style="color: red;">Error: ${result.detail || 'Analysis failed'}</div>`;
-                    }
-                } catch (error) {
-                    resultsDiv.innerHTML = `<div style="color: red;">Error: ${error.message}</div>`;
-                }
-            });
-            
-            function displayResults(result) {
-                const resultsDiv = document.getElementById('results');
-                
-                resultsDiv.innerHTML = `
-                    <h2>📋 Document Analysis Results</h2>
-                    
-                    <div class="section">
-                        <h3>📝 Summary</h3>
-                        <p>${result.summary}</p>
-                    </div>
-                    
-                    <div class="section">
-                        <h3>🔑 Key Points</h3>
-                        <ul>
-                            ${result.key_points.map(point => `<li>${point}</li>`).join('')}
-                        </ul>
-                    </div>
-                    
-                    <div class="section risk">
-                        <h3>⚠️ Risks & Concerns</h3>
-                        <ul>
-                            ${result.risks_and_concerns.map(risk => `<li>${risk}</li>`).join('')}
-                        </ul>
-                    </div>
-                    
-                    <div class="section recommendation">
-                        <h3>💡 Recommendations</h3>
-                        <ul>
-                            ${result.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                        </ul>
-                    </div>
-                    
-                    <div class="section">
-                        <h3>🗣️ In Simple Terms</h3>
-                        <p>${result.simplified_explanation}</p>
-                    </div>
-                `;
-            }
-            
-            async function askQuestion() {
-                const questionInput = document.getElementById('questionInput');
-                const question = questionInput.value.trim();
-                
-                if (!question) {
-                    alert('Please enter a question');
-                    return;
-                }
-                
-                const resultsDiv = document.getElementById('questionResults');
-                resultsDiv.innerHTML = '<div class="loading">🤔 Finding the answer...</div>';
-                
-                try {
-                    const response = await fetch('/ask-question', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            question: question,
-                            document_id: currentDocumentId,
-                            document_text: currentDocumentText
-                        })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        resultsDiv.innerHTML = `
-                            <div class="section">
-                                <h4>💬 Answer</h4>
-                                <p>${result.answer}</p>
-                                
-                                <h4>📄 Relevant Sections</h4>
-                                <ul>
-                                    ${result.relevant_sections.map(section => `<li><em>"${section}"</em></li>`).join('')}
-                                </ul>
-                                
-                                <p><small>Confidence Level: ${result.confidence_level}</small></p>
-                            </div>
-                        `;
-                        questionInput.value = '';
-                    } else {
-                        resultsDiv.innerHTML = `<div style="color: red;">Error: ${result.detail}</div>`;
-                    }
-                } catch (error) {
-                    resultsDiv.innerHTML = `<div style="color: red;">Error: ${error.message}</div>`;
-                }
-            }
-        </script>
-    </body>
-    </html>
-    """
-    return HTMLResponse(content=html_content)
+async def root(request: Request):
+    """Serve the main application page (templated UI)"""
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/analyze-document", response_model=DocumentAnalysisResponse)
 async def analyze_document(
