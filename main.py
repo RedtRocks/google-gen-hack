@@ -102,11 +102,12 @@ def call_gemini_api(prompt: str, api_key: str) -> str:
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.3,
-            "topP": 0.8,
-            "topK": 40,
+            "temperature": 0.25,  # make responses more deterministic
+            "topP": 0.85,
+            "topK": 32,
             "maxOutputTokens": 2048,
-        }
+        },
+        # Safety settings can be added here if needed
     }
     
     try:
@@ -121,89 +122,148 @@ def call_gemini_api(prompt: str, api_key: str) -> str:
 
 def create_analysis_prompt(text: str, document_type: str, user_role: str, complexity_level: str) -> str:
     """Create a comprehensive analysis prompt for legal documents"""
-    
     role_context = {
         "individual": "a regular person without legal expertise",
         "business": "a small business owner",
         "tenant": "someone looking to rent property",
         "borrower": "someone seeking a loan"
     }
-    
+
     complexity_instructions = {
         "simple": "Use very simple language, avoid legal jargon, explain everything in everyday terms",
         "detailed": "Provide moderate detail with some legal terms explained in parentheses",
         "expert": "Include relevant legal terminology with explanations"
     }
-    
-    prompt = f"""
-You are a legal document expert helping {role_context.get(user_role, 'a person')} understand a {document_type}.
 
-INSTRUCTIONS:
-- {complexity_instructions.get(complexity_level, 'Use clear, simple language')}
-- Focus on practical implications and real-world consequences
-- Highlight potential risks and red flags
-- Provide actionable recommendations
-- Be empathetic and supportive in tone
+    prompt = f"""You are a senior legal analyst assisting {role_context.get(user_role, 'a person')} in understanding a {document_type}.
 
-DOCUMENT TEXT:
-{text[:8000]}  # Limit text length
+QUALITY & STYLE DIRECTIVES:
+1. {complexity_instructions.get(complexity_level, 'Use clear, simple language')}
+2. NO hallucinations: only derive points present or strongly implied.
+3. Each list item MUST be concise (≤180 chars) and start with an action or clear noun phrase.
+4. Separate RISK vs NEUTRAL facts—do not mix.
+5. If a section cannot be confidently derived, include one item: "Insufficient detail to assess".
+6. Avoid hedging like "maybe" unless ambiguity exists and then state why.
+7. Output ONLY raw JSON (no markdown fences / backticks).
 
-Please provide a comprehensive analysis in the following JSON format:
+DOCUMENT (truncated to 8k chars if long):
+{text[:8000]}
+
+Return STRICT JSON with EXACT keys:
 {{
-    "summary": "A clear, concise summary of what this document is about and its main purpose",
-    "key_points": [
-        "List of 5-7 most important points from the document",
-        "Each point should be in plain English",
-        "Focus on what matters most to the user"
-    ],
-    "risks_and_concerns": [
-        "Potential risks or unfavorable terms",
-        "Things the user should be careful about",
-        "Red flags or concerning clauses"
-    ],
-    "recommendations": [
-        "Specific actions the user should take",
-        "Questions they should ask",
-        "Things to negotiate or clarify"
-    ],
-    "simplified_explanation": "A paragraph explaining the document as if talking to a friend, using analogies and simple examples where helpful"
+  "summary": "Clear purpose & scope (2-4 sentences, no marketing fluff).",
+  "key_points": ["Concrete primary obligations / definitions / mechanisms"],
+  "risks_and_concerns": ["Specific unfavorable clauses, asymmetries, penalties, vague areas"],
+  "recommendations": ["Actionable next steps: clarify / negotiate / monitor"],
+  "simplified_explanation": "Plain-language analogy / story style explanation"
 }}
 
-Respond ONLY with valid JSON.
-"""
+VALIDATION RULES:
+- Valid JSON parseable by json.loads.
+- No trailing commas, no comments, no markdown.
+- Arrays 5–8 items (2–4 if very short document).
+
+IF YOU CANNOT fully comply: still return syntactically valid JSON with best-effort fields."""
     return prompt
 
 def create_question_prompt(question: str, document_text: str) -> str:
     """Create a prompt for answering specific questions about the document"""
-    
-    prompt = f"""
-You are a helpful legal assistant. A user has a question about their legal document.
+    prompt = f"""You are a precise legal assistant.
 
-DOCUMENT TEXT:
+DOCUMENT (truncated):
 {document_text[:6000]}
 
-USER QUESTION:
-{question}
+QUESTION: {question}
 
-Please provide a helpful answer in the following JSON format:
+Return ONLY JSON (no markdown) with keys:
 {{
-    "answer": "A clear, helpful answer to the user's question in simple language",
-    "relevant_sections": [
-        "Specific quotes or sections from the document that relate to the question",
-        "Include the actual text that supports your answer"
-    ],
-    "confidence_level": "high/medium/low - how confident you are in this answer"
+    "answer": "Direct, plain-language answer (avoid filler)",
+    "relevant_sections": ["Verbatim supporting excerpts (short, trimmed)"],
+    "confidence_level": "high" | "medium" | "low"
 }}
 
-Guidelines:
-- Use simple, non-legal language
-- Be specific and practical
-- If you're not certain, say so
-- Focus on what this means for the user personally
-
-Respond ONLY with valid JSON.
-"""
+RULES:
+- If answer not clearly supported: confidence_level=\"low\" and explain uncertainty briefly.
+- Each relevant_sections item ≤ 240 chars and MUST appear verbatim in the document.
+- No invented clauses."""
     return prompt
+
+# ==================== JSON PARSING UTILITIES ====================
+
+JSON_CLEAN_PATTERN = re.compile(r"```(?:json)?(.*?)```", re.DOTALL | re.IGNORECASE)
+
+def extract_json_block(raw: str) -> Optional[str]:
+    """Attempt to extract a valid JSON object from a model response.
+    Strategies:
+    1. If fenced in markdown code blocks, take inside.
+    2. Locate first '{' and last '}' and attempt parse progressively.
+    3. Clean common artifacts (trailing backticks, stray commas before closing brackets).
+    """
+    if not raw:
+        return None
+
+    candidate = raw.strip()
+
+    # 1. Markdown fence
+    fenced = JSON_CLEAN_PATTERN.search(candidate)
+    if fenced:
+        candidate = fenced.group(1).strip()
+
+    # 2. Narrow to outermost braces
+    if candidate.count('{') and candidate.count('}'):
+        first = candidate.find('{')
+        last = candidate.rfind('}')
+        candidate = candidate[first:last+1]
+
+    # 3. Light sanitation: remove trailing commas before ] or }
+    candidate = re.sub(r",(\s*[}\]])", r"\1", candidate)
+
+    # 4. Try direct parse, if fail progressively shrink from end
+    for _ in range(3):
+        try:
+            json.loads(candidate)
+            return candidate
+        except json.JSONDecodeError as e:
+            # Try trimming any trailing non-JSON noise
+            candidate = candidate.rstrip('`\n\r ')
+            if not candidate.endswith('}'):  # cannot fix easily
+                break
+    return None
+
+def parse_analysis_response(raw: str) -> Optional[Dict[str, Any]]:
+    """Parse raw model output into structured dict if possible."""
+    block = extract_json_block(raw)
+    if not block:
+        return None
+    try:
+        data = json.loads(block)
+    except Exception:
+        return None
+
+    # Basic schema correction
+    required_keys = {"summary", "key_points", "risks_and_concerns", "recommendations", "simplified_explanation"}
+    for k in required_keys:
+        data.setdefault(k, "" if k in {"summary", "simplified_explanation"} else [])
+    # Normalize list fields
+    for list_key in ["key_points", "risks_and_concerns", "recommendations"]:
+        if not isinstance(data.get(list_key), list):
+            data[list_key] = [str(data.get(list_key, ""))] if data.get(list_key) else []
+    return data
+
+def parse_question_response(raw: str) -> Optional[Dict[str, Any]]:
+    block = extract_json_block(raw)
+    if not block:
+        return None
+    try:
+        data = json.loads(block)
+    except Exception:
+        return None
+    # Fill defaults
+    data.setdefault("answer", "")
+    if not isinstance(data.get("relevant_sections"), list):
+        data["relevant_sections"] = [str(data.get("relevant_sections", ""))] if data.get("relevant_sections") else []
+    data.setdefault("confidence_level", "low")
+    return data
 
 # Global storage for documents (in production, use a proper database)
 document_storage = {}
@@ -251,23 +311,19 @@ async def analyze_document(
         
         # Call Gemini API
         response = call_gemini_api(prompt, GEMINI_API_KEY)
-        
-        # Parse JSON response
-        try:
-            analysis_data = json.loads(response)
+
+        parsed = parse_analysis_response(response)
+        if parsed:
+            return DocumentAnalysisResponse(document_id=document_id, **parsed)
+        else:
+            logger.warning("Falling back – could not parse JSON analysis")
             return DocumentAnalysisResponse(
                 document_id=document_id,
-                **analysis_data
-            )
-        except json.JSONDecodeError:
-            # Fallback if JSON parsing fails
-            return DocumentAnalysisResponse(
-                document_id=document_id,
-                summary="Analysis completed but formatting error occurred",
-                key_points=["Please try again or contact support"],
-                risks_and_concerns=["Unable to parse detailed analysis"],
-                recommendations=["Please re-upload the document"],
-                simplified_explanation=response[:500] + "..."
+                summary="Automated analysis generated but JSON formatting failed.",
+                key_points=["Retry may yield structured output", "Model returned unstructured text"],
+                risks_and_concerns=["Parsing failure prevented deeper extraction"],
+                recommendations=["Re-run analysis", "Consider shortening or simplifying upload"],
+                simplified_explanation=response[:600] + ("..." if len(response) > 600 else "")
             )
             
     except Exception as e:
@@ -301,23 +357,18 @@ async def analyze_text(request: DocumentAnalysisRequest):
         
         # Call Gemini API
         response = call_gemini_api(prompt, GEMINI_API_KEY)
-        
-        # Parse JSON response
-        try:
-            analysis_data = json.loads(response)
+        parsed = parse_analysis_response(response)
+        if parsed:
+            return DocumentAnalysisResponse(document_id=document_id, **parsed)
+        else:
+            logger.warning("Falling back – could not parse JSON analysis (text endpoint)")
             return DocumentAnalysisResponse(
                 document_id=document_id,
-                **analysis_data
-            )
-        except json.JSONDecodeError:
-            # Fallback if JSON parsing fails
-            return DocumentAnalysisResponse(
-                document_id=document_id,
-                summary="Analysis completed but formatting error occurred",
-                key_points=["Please try again or contact support"],
-                risks_and_concerns=["Unable to parse detailed analysis"],
-                recommendations=["Please try with different text"],
-                simplified_explanation=response[:500] + "..."
+                summary="Automated analysis generated but JSON formatting failed.",
+                key_points=["Retry may yield structured output", "Model returned unstructured text"],
+                risks_and_concerns=["Parsing failure prevented deeper extraction"],
+                recommendations=["Re-run analysis", "Consider reducing document length"],
+                simplified_explanation=response[:600] + ("..." if len(response) > 600 else "")
             )
             
     except Exception as e:
@@ -349,16 +400,14 @@ async def ask_question(request: QuestionRequest):
         
         # Call Gemini API
         response = call_gemini_api(prompt, GEMINI_API_KEY)
-        
-        # Parse JSON response
-        try:
-            question_data = json.loads(response)
-            return QuestionResponse(**question_data)
-        except json.JSONDecodeError:
-            # Fallback if JSON parsing fails
+        parsed = parse_question_response(response)
+        if parsed:
+            return QuestionResponse(**parsed)
+        else:
+            logger.warning("Falling back – could not parse JSON question response")
             return QuestionResponse(
-                answer=response[:500] + "...",
-                relevant_sections=["Could not parse structured response"],
+                answer=response[:500] + ("..." if len(response) > 500 else ""),
+                relevant_sections=["Unstructured answer returned"],
                 confidence_level="low"
             )
             
