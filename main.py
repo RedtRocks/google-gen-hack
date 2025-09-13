@@ -8,12 +8,11 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 import google.generativeai as genai
 import requests
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi import Request
 from pydantic import BaseModel
 import PyPDF2
 from io import BytesIO
@@ -265,8 +264,47 @@ def parse_question_response(raw: str) -> Optional[Dict[str, Any]]:
     data.setdefault("confidence_level", "low")
     return data
 
-# Global storage for documents (in production, use a proper database)
+
+# Global storage for documents and chat history (in production, use a proper database)
 document_storage = {}
+chat_history_storage = {}  # {session_id: [ {question, answer, relevant_sections, confidence_level, timestamp} ] }
+
+# ==================== API ENDPOINTS ====================
+
+def get_session_id(request: Request):
+    # Use cookie or fallback to IP for demo; in production use real session/user auth
+    session_id = request.cookies.get('session_id')
+    if not session_id:
+        session_id = str(uuid.uuid4())
+    return session_id
+
+@app.post("/save-chat", response_class=JSONResponse)
+async def save_chat(request: Request):
+    data = await request.json()
+    session_id = get_session_id(request)
+    chat = {
+        "question": data.get("question"),
+        "answer": data.get("answer"),
+        "relevant_sections": data.get("relevant_sections", []),
+        "confidence_level": data.get("confidence_level", ""),
+        "timestamp": int(time.time())
+    }
+    chat_history_storage.setdefault(session_id, []).append(chat)
+    return {"status": "ok"}
+
+@app.get("/chat-history", response_class=JSONResponse)
+async def chat_history(request: Request):
+    session_id = get_session_id(request)
+    history = chat_history_storage.get(session_id, [])
+    return {"chats": history}
+
+@app.post("/clear-chat-history", response_class=JSONResponse)
+async def clear_chat_history(request: Request):
+    """Clear chat history for current session"""
+    session_id = get_session_id(request)
+    if session_id in chat_history_storage:
+        chat_history_storage[session_id] = []
+    return {"success": True}
 
 # ==================== API ENDPOINTS ====================
 

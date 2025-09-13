@@ -1,3 +1,289 @@
+/* Layout wrapper and chat history sidebar */
+.layout-wrapper {
+  display: flex;
+  min-height: calc(100vh - 140px);
+  gap: 2.5rem;
+}
+
+.chat-history-sidebar {
+  width: 320px;
+  background: linear-gradient(135deg, rgba(30,41,59,0.82) 0%, rgba(47, 43, 119, 0.18) 100%);
+  border-right: 2px solid var(--border-strong);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 8px 32px -8px rgba(37,99,235,0.22), 0 2px 8px rgba(0,0,0,0.18);
+  font-family: 'League Spartan', var(--font-display), var(--font-sans);
+  margin-top: 0;
+  min-height: 100vh;
+  border-top-right-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+  /* Glass effect overlay */
+  overflow: hidden;
+}
+/* Glass effect for sidebar */
+.chat-history-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(125deg, rgba(var(--primary-glow),.14), rgba(255,255,255,.04) 35%, transparent 70%);
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+/* Ensure sidebar content is above glass overlay */
+.chat-history-sidebar > * {
+  position: relative;
+  z-index: 1;
+}
+.chat-history-sidebar.collapsed { width: 54px; }
+.chat-history-sidebar.collapsed .chat-history-header h3,
+.chat-history-sidebar.collapsed .chat-history-item .chat-a,
+.chat-history-sidebar.collapsed .chat-history-item .chat-meta,
+.chat-history-sidebar.collapsed .empty-state { display: none; }
+.chat-history-sidebar.collapsed .chat-history-item { padding: .75rem .4rem .7rem .55rem; }
+.chat-history-sidebar.collapsed .chat-q { -webkit-line-clamp: 1; line-clamp: 1; font-size:.7rem; }
+.chat-history-sidebar.collapsed #collapseSidebar { transform: rotate(180deg); }
+
+.chat-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.2rem 0.85rem;
+  border-bottom: 2px solid var(--border-strong);
+  background: solid(#0f0707);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 12px -4px rgba(37,99,235,0.13);
+  font-family: 'League Spartan', var(--font-display), var(--font-sans);
+}
+
+.chat-history-header h3 {
+  font-size: 1.08rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: 'League Spartan', var(--font-display), var(--font-sans);
+}
+
+.chat-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.7rem 0 0 0;
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+  scrollbar-width: thin;
+  scrollbar-color: #e0e7ef #2563eb;
+}
+
+.chat-history-list::-webkit-scrollbar {
+  width: 10px;
+}
+.chat-history-list::-webkit-scrollbar-track {
+  background: rgba(15,23,42,0.15);
+}
+.chat-history-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg,#3b82f6,#1d4ed8);
+  border-radius: 8px;
+  border: 2px solid rgba(17,25,39,0.85);
+}
+.chat-history-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg,#60a5fa,#2563eb);
+}
+
+.chat-history-item {
+  padding: 0.95rem 1.1rem 0.8rem 1.2rem;
+  border-bottom: 1.5px solid #181b21;
+  cursor: pointer;
+  position: relative;
+  transition: background .18s, border-color .3s;
+  background: #181b21;
+  margin-bottom: 0.18rem;
+  border-radius: 10px;
+  font-family: 'League Spartan', var(--font-display), var(--font-sans);
+}
+.chat-history-item:before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg,#3b82f6,#1d4ed8);
+  opacity: 0;
+  transition: opacity .25s;
+  border-radius: 0 2px 2px 0;
+}
+
+.chat-history-item:hover {
+  background: rgba(59,130,246,0.08);
+}
+.chat-history-item:hover:before { opacity: .65; }
+
+.chat-history-item.active {
+  background: rgba(59,130,246,0.16);
+}
+.chat-history-item.active:before { opacity: 1; }
+
+.chat-q {
+  font-weight: 700;
+  color: #e0e7ef;
+  margin-bottom: 0.22rem;
+  font-size: 0.97rem;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: 'League Spartan', var(--font-display), var(--font-sans);
+  :root {
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
+    --font-display: 'League Spartan', var(--font-sans);
+    --bg: #101624;
+    --bg-alt: #16213a;
+    --bg-elev: rgba(30,41,59,0.85);
+    --border: #233056;
+    --border-strong: #2563eb;
+    --text: #eaf3ff;
+    --text-dim: #a3b6d9;
+    --primary: #2563eb;
+    --primary-accent: #60a5fa;
+    --primary-glow: 59 130 246;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --success: #10b981;
+    --radius-sm: 6px;
+    --radius: 12px;
+    --radius-lg: 18px;
+    --shadow-sm: 0 2px 8px rgba(37,99,235,.10);
+    --shadow: 0 8px 32px -8px rgba(37,99,235,.18), 0 2px 8px rgba(0,0,0,.18);
+    --focus-ring: 0 0 0 3px rgba(96,165,250,.35);
+    --grad: linear-gradient(135deg,#2563eb 0%,#6366f1 55%,#9333ea 100%);
+  }
+}
+
+.chat-a {
+  color: #e0e7ef;
+  margin-bottom: 0.32rem;
+  font-size: 0.87rem;
+  line-height: 1.28;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: 'League Spartan', var(--font-display), var(--font-sans);
+}
+
+  [data-theme='light'] {
+    --bg: #f5f7fa;
+    --bg-alt: #eaf3ff;
+    --bg-elev: #f5f7fa;
+    --border: #c5ccd5;
+    --border-strong: #2563eb;
+    --text: #16213a;
+    --text-dim: #5b6472;
+    --primary: #2563eb;
+    --primary-accent: #6366f1;
+    --primary-glow: 59 130 246;
+    --grad: linear-gradient(135deg,#2563eb 0%,#6366f1 55%,#9333ea 100%);
+    --shadow: 0 8px 32px -8px rgba(37,99,235,.18), 0 2px 8px rgba(0,0,0,.08);
+  }
+.chat-meta {
+  font-size: 0.74rem;
+  color: #e0e7ef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'League Spartan', var(--font-display), var(--font-sans);
+}
+
+.empty-state {
+  color: #e0e7ef;
+  text-align: center;
+  padding: 2.2rem 1rem;
+  body {
+    margin:0;
+    font-family: var(--font-sans);
+    background:
+      linear-gradient(120deg, #101624 0%, #16213a 40%, #2563eb 100%),
+      radial-gradient(circle at 18% 22%, rgba(59,130,246,.18), transparent 55%),
+      radial-gradient(circle at 82% 18%, rgba(147,51,234,.13), transparent 60%);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    min-height:100vh;
+    background-attachment: fixed;
+  }
+  font-style: italic;
+  font-size: .92rem;
+  font-family: 'League Spartan', var(--font-display), var(--font-sans);
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  .site-header, .site-footer {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 1rem 2rem; gap:1rem; flex-wrap:wrap;
+    background: linear-gradient(90deg, rgba(30,41,59,0.98) 0%, rgba(37,99,235,0.85) 100%);
+    border-bottom:2px solid var(--border-strong);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: 0 2px 16px -6px rgba(37,99,235,.13);
+  }
+}
+  .site-footer {
+    border-top:2px solid var(--border-strong); border-bottom:none; font-size:.9rem; justify-content:center; margin-top:4rem; color:var(--text-dim); background: linear-gradient(90deg, rgba(30,41,59,0.85) 0%, rgba(37,99,235,0.65) 100%);
+  }
+
+  .brand { display:flex; align-items:center; gap:.6rem; font-weight:700; font-size:1.15rem; font-family: var(--font-display); }
+.main-content .container {
+  .logo { font-size:2.1rem; filter: drop-shadow(0 2px 4px rgba(37,99,235,.18)); }
+  width: 100%;
+  .brand-name { letter-spacing:1px; font-family: var(--font-display); }
+  max-width: none;
+    .container { width: min(1180px, 100% - 2.2rem); margin: 2.2rem 0 4rem 1.5rem; background: rgba(30,41,59,0.82); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 2.2rem 2.2rem 2rem; }
+    
+  margin: 2.2rem auto 4rem;
+  .card { background: linear-gradient(120deg, rgba(30,41,59,0.98) 0%, rgba(37,99,235,0.18) 100%); border:1.5px solid var(--border-strong); border-radius: var(--radius-lg); padding:2rem 2.2rem 2.2rem; box-shadow: var(--shadow); position:relative; overflow:hidden; backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%); font-family: var(--font-display); }
+}
+
+/* Responsive adjustments */
+  .main-nav { display:flex; gap:1.2rem; align-items:center; position:relative; }
+@media (max-width: 1024px) {
+  .nav-link { text-decoration:none; color:var(--text-dim); font-weight:600; padding:.65rem 1.2rem; border-radius: 999px; transition:.25s; position:relative; overflow:hidden; backdrop-filter: blur(6px); background:rgba(37,99,235,0.08); border:1.5px solid var(--border-strong); font-family: var(--font-display); }
+    width: 280px;
+  }
+  .nav-link:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+  .nav-link:hover { color:var(--primary); background:rgba(37,99,235,0.18); border-color:var(--primary); box-shadow:0 4px 12px -4px rgba(37,99,235,.18); }
+}
+
+@media (max-width: 768px) {
+  .icon-btn { background:linear-gradient(90deg, rgba(37,99,235,0.13) 0%, rgba(30,41,59,0.18) 100%); color:var(--primary); border:1.5px solid var(--border-strong); padding:.65rem 1.1rem; font-size:1.08rem; border-radius:var(--radius-sm); cursor:pointer; display:inline-flex; align-items:center; gap:.4rem; transition:.2s; font-family: var(--font-display); }
+  .icon-btn:hover { color:#fff; background:var(--primary); border-color:var(--primary-accent); }
+  .icon-btn:focus-visible { outline:none; box-shadow: var(--focus-ring); }
+  .layout-wrapper {
+    flex-direction: column;
+  }
+  
+  .chat-history-sidebar {
+    width: 100%;
+    height: 200px;
+    border-right: none;
+    border-bottom: 1px solid #334155;
+  }
+  
+  .chat-history-list {
+    max-height: 150px;
+  }
+  
+  .main-content .container {
+    margin: 1rem auto 2rem;
+    padding: 0 1rem;
+  }
+}
 /* Modern, accessible design system */
 :root {
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
@@ -169,4 +455,15 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline:none
 
 @media (max-width: 520px) {
   .triple-grid { grid-template-columns: 1fr; }
+}
+
+/* Layout: increase right-side breathing room for upload/main content */
+.main-content .container {
+  padding-right: 3rem !important;
+  margin-right: 3rem !important;
+}
+
+@media (max-width: 900px) {
+  /* remove extra right margin on smaller screens */
+  .main-content .container { padding-right: 1rem !important; margin-right: 0.6rem !important; }
 }

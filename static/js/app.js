@@ -116,6 +116,13 @@
           <p><span class="status-chip">Confidence: ${escapeHtml(data.confidence_level)}</span></p>
         </div>`;
       questionInput.value='';
+      // Save chat to history
+      window.saveChatToHistory && window.saveChatToHistory({
+        question: q,
+        answer: data.answer,
+        relevant_sections: data.relevant_sections,
+        confidence_level: data.confidence_level
+      });
     } catch(err) {
       questionResults.innerHTML = `<div class='answer-block'><h4>Error</h4><p>${escapeHtml(err.message)}</p></div>`;
     }
@@ -137,4 +144,91 @@
     localStorage.setItem('theme', current);
     themeToggle.textContent = current === 'dark' ? '🌙' : '☀️';
   });
+
+  // Chat history functionality - load on page load
+  const chatHistoryList = document.getElementById('chatHistoryList');
+  if (chatHistoryList) {
+    loadChatHistory();
+  }
+  // Clear history button
+  const clearHistoryBtn = document.getElementById('clearHistory');
+  if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener('click', () => {
+      if (confirm('Clear all chat history?')) {
+        clearChatHistory();
+      }
+    });
+  }
 })();
+
+// Global chat history functions
+window.saveChatToHistory = function(chatData) {
+  fetch('/save-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(chatData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      loadChatHistory(); // Refresh the chat history display
+    }
+  })
+  .catch(error => {
+    console.error('Error saving chat:', error);
+  });
+};
+
+function loadChatHistory() {
+  const chatHistoryList = document.getElementById('chatHistoryList');
+  if (!chatHistoryList) return;
+  
+  fetch('/chat-history')
+    .then(response => response.json())
+    .then(data => {
+      if (data.chats && data.chats.length > 0) {
+        chatHistoryList.innerHTML = data.chats.map((chat, index) => `
+          <li class="chat-history-item" onclick="insertChatToForm('${escapeHtml(chat.question)}')">
+            <div class="chat-q">${escapeHtml(chat.question)}</div>
+            <div class="chat-a">${escapeHtml(chat.answer)}</div>
+            <div class="chat-meta">
+              <span>${new Date(chat.timestamp).toLocaleString()}</span>
+              <span>${escapeHtml(chat.confidence_level || 'Medium')}</span>
+            </div>
+          </li>
+        `).join('');
+      } else {
+        chatHistoryList.innerHTML = '<div class="empty-state">No chat history yet</div>';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading chat history:', error);
+      chatHistoryList.innerHTML = '<div class="empty-state">Error loading chat history</div>';
+    });
+}
+
+function insertChatToForm(question) {
+  const questionInput = document.getElementById('questionInput');
+  if (questionInput) {
+    questionInput.value = question;
+    questionInput.focus();
+    questionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function clearChatHistory() {
+  fetch('/clear-chat-history', { method: 'POST' })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        loadChatHistory(); // Refresh the display
+      }
+    })
+    .catch(error => {
+      console.error('Error clearing chat history:', error);
+    });
+}
+
+function escapeHtml(str='') { 
+  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); 
+}
