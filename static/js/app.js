@@ -8,7 +8,7 @@
   const questionResults = document.getElementById('questionResults');
   const fileInput = document.getElementById('fileInput');
   const textInput = document.getElementById('textInput');
-  const themeToggle = document.getElementById('themeToggle');
+
   const loadingDialog = document.getElementById('loadingDialog');
   const loadingText = document.getElementById('loadingText');
   const resetBtn = document.getElementById('resetBtn');
@@ -134,16 +134,7 @@
     window.scrollTo({ top:0, behavior:'smooth' });
   });
 
-  // Theme toggle
-  const root = document.documentElement;
-  const storedTheme = localStorage.getItem('theme');
-  if(storedTheme) root.setAttribute('data-theme', storedTheme);
-  themeToggle?.addEventListener('click', () => {
-    const current = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', current);
-    localStorage.setItem('theme', current);
-    themeToggle.textContent = current === 'dark' ? '🌙' : '☀️';
-  });
+
 
   // Chat history functionality - load on page load
   const chatHistoryList = document.getElementById('chatHistoryList');
