@@ -67,25 +67,26 @@ export const LegalDocumentPage = () => {
         });
       }
 
+      // Get response as text first (can only read body once)
+      const responseText = await response.text();
+      console.log('API Response Status:', response.status);
+      console.log('API Response Text:', responseText.substring(0, 500));
+
       if (!response.ok) {
-        // Try to get error details
+        // Try to parse as JSON error
         let errorMessage = `HTTP ${response.status}`;
         try {
-          const errorData = await response.json() as { detail?: string };
+          const errorData = JSON.parse(responseText) as { detail?: string };
           errorMessage = errorData.detail || errorMessage;
         } catch {
-          // If JSON parsing fails, try to get text
-          const errorText = await response.text();
-          console.error('Non-JSON error response:', errorText);
-          errorMessage = errorText.substring(0, 200);
+          // Not JSON, use the text response
+          console.error('Non-JSON error response:', responseText);
+          errorMessage = responseText.substring(0, 200) || errorMessage;
         }
         throw new Error(errorMessage);
       }
 
-      // Log response before parsing to debug JSON issues
-      const responseText = await response.text();
-      console.log('API Response:', responseText);
-      
+      // Parse successful response
       let data: AnalysisResult;
       try {
         data = JSON.parse(responseText) as AnalysisResult;
