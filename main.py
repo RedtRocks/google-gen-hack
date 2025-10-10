@@ -34,14 +34,15 @@ app = FastAPI(
     version="1.1.0"
 )
 
-# Mount frontend assets if available
-FRONTEND_DIST_PATH = Path(__file__).parent / "client" / "dist"
-FRONTEND_ASSETS_PATH = FRONTEND_DIST_PATH / "assets"
+# Mount frontend assets if available (skip for Vercel serverless)
+if not os.environ.get("VERCEL"):
+    FRONTEND_DIST_PATH = Path(__file__).parent / "client" / "dist"
+    FRONTEND_ASSETS_PATH = FRONTEND_DIST_PATH / "assets"
 
-if FRONTEND_ASSETS_PATH.exists():
-    app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS_PATH)), name="assets")
-else:
-    logger.warning("Frontend assets not found at %s. Run `npm run client:build` to generate them.", FRONTEND_ASSETS_PATH)
+    if FRONTEND_ASSETS_PATH.exists():
+        app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS_PATH)), name="assets")
+    else:
+        logger.warning("Frontend assets not found at %s. Run `npm run client:build` to generate them.", FRONTEND_ASSETS_PATH)
 
 # Add CORS middleware
 app.add_middleware(

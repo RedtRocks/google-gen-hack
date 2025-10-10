@@ -2,6 +2,7 @@
   "name": "makyo-app",
   "type": "module",
   "scripts": {
+    "build": "npm run client:build",
     "server": "cross-env-shell \"node scripts/run-server.mjs\"",
     "client": "node scripts/run-with-buildid.mjs vite --config client/vite.config.ts",
     "client:build": "npm run client:typecheck && node scripts/run-with-buildid.mjs vite build --config client/vite.config.ts",
