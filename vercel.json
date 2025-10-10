@@ -16,11 +16,10 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.py",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+      "dest": "api/index.py"
     },
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico|json|txt))",
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico|json|txt|map))",
       "dest": "/client/dist/$1"
     },
     {
