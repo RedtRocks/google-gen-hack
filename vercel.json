@@ -1,39 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "api/test.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "client/dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/test",
-      "dest": "/api/test.py"
-    },
-    {
-      "src": "/(analyze-document|analyze-text|ask-question|save-chat|chat-history|clear-chat-history|health)",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico|json|txt|map))",
-      "dest": "/client/dist/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/client/dist/index.html"
-    }
-  ],
-  "buildCommand": "npm run client:build"
+  "buildCommand": "npm run client:build",
+  "outputDirectory": "client/dist"
 }
