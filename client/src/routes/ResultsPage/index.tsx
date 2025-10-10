@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import styles from './styles.module.scss';
+import { getApiUrl } from '@client/utils/api';
 
 interface AnalysisResult {
   document_id: string;
@@ -55,7 +56,7 @@ export const ResultsPage = () => {
     setError('');
 
     try {
-      const response = await fetch('/ask-question', {
+      const response = await fetch(getApiUrl('ask-question'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -88,7 +89,7 @@ export const ResultsPage = () => {
       setIsChatExpanded(true); // Expand chat when answer arrives
 
       // Save to backend
-      await fetch('/save-chat', {
+      await fetch(getApiUrl('save-chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newAnswer),

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import styles from './styles.module.scss';
+import { getApiUrl } from '@client/utils/api';
 
 interface AnalysisResult {
   document_id: string;
@@ -49,12 +50,12 @@ export const LegalDocumentPage = () => {
         formData.append('user_role', userRole);
         formData.append('complexity_level', complexityLevel);
         
-        response = await fetch('/analyze-document', {
+        response = await fetch(getApiUrl('analyze-document'), {
           method: 'POST',
           body: formData,
         });
       } else {
-        response = await fetch('/analyze-text', {
+        response = await fetch(getApiUrl('analyze-text'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
