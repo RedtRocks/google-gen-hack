@@ -66,8 +66,18 @@ export const ResultsPage = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json() as { detail?: string };
-        throw new Error(errorData.detail || 'Question failed');
+        // Try to get error details
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json() as { detail?: string };
+          errorMessage = errorData.detail || errorMessage;
+        } catch {
+          // If JSON parsing fails, try to get text
+          const errorText = await response.text();
+          console.error('Non-JSON error response:', errorText);
+          errorMessage = errorText.substring(0, 200);
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json() as {

@@ -68,11 +68,32 @@ export const LegalDocumentPage = () => {
       }
 
       if (!response.ok) {
-        const errorData = await response.json() as { detail?: string };
-        throw new Error(errorData.detail || 'Analysis failed');
+        // Try to get error details
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json() as { detail?: string };
+          errorMessage = errorData.detail || errorMessage;
+        } catch {
+          // If JSON parsing fails, try to get text
+          const errorText = await response.text();
+          console.error('Non-JSON error response:', errorText);
+          errorMessage = errorText.substring(0, 200);
+        }
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json() as AnalysisResult;
+      // Log response before parsing to debug JSON issues
+      const responseText = await response.text();
+      console.log('API Response:', responseText);
+      
+      let data: AnalysisResult;
+      try {
+        data = JSON.parse(responseText) as AnalysisResult;
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError);
+        console.error('Response was:', responseText.substring(0, 500));
+        throw new Error('Invalid JSON response from server. Check console for details.');
+      }
       
       // Store result in sessionStorage
       sessionStorage.setItem('analysisResult', JSON.stringify(data));
