@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
     },
     {
       "src": "package.json",
@@ -15,39 +18,8 @@
   ],
   "routes": [
     {
-      "src": "/api/analyze-document",
-      "dest": "api/index.py",
-      "methods": ["POST"]
-    },
-    {
-      "src": "/api/analyze-text",
-      "dest": "api/index.py",
-      "methods": ["POST"]
-    },
-    {
-      "src": "/api/ask-question",
-      "dest": "api/index.py",
-      "methods": ["POST"]
-    },
-    {
-      "src": "/api/save-chat",
-      "dest": "api/index.py",
-      "methods": ["POST"]
-    },
-    {
-      "src": "/api/chat-history",
-      "dest": "api/index.py",
-      "methods": ["GET"]
-    },
-    {
-      "src": "/api/clear-chat-history",
-      "dest": "api/index.py",
-      "methods": ["POST"]
-    },
-    {
-      "src": "/api/health",
-      "dest": "api/index.py",
-      "methods": ["GET"]
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
     },
     {
       "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico|json|txt|map))",

@@ -1,15 +1,14 @@
+from mangum import Mangum
 import sys
 import os
 
-# Add parent directory to path so we can import main
+# Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from main import app as fastapi_app
-from mangum import Mangum
 
-# Wrap FastAPI with Mangum for AWS Lambda/Vercel compatibility
-# api_gateway_base_path strips /api prefix so FastAPI sees /analyze-document
+# Create Mangum handler - Vercel will call this
 handler = Mangum(fastapi_app, lifespan="off", api_gateway_base_path="/api")
 
-# Vercel will look for 'handler' or 'app'
+# Vercel looks for 'handler' or 'app'
 app = handler
