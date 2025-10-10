@@ -13,10 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY main.py ./
-COPY .env ./
 
-# Copy pre-built frontend (already built via npm run client:build locally)
-COPY client/dist ./client/dist
+# Copy pre-built frontend
+COPY client/dist/ ./client/dist/
 
 # Expose port
 EXPOSE 8080
