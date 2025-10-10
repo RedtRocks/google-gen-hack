@@ -1,0 +1,5 @@
+api/
+server/
+makyo/
+*.pyc
+__pycache__/

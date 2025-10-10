@@ -6,13 +6,13 @@
  * In development, they're served by the FastAPI dev server at root
  */
 export const getApiUrl = (endpoint: string): string => {
-  // Check if we're in production (Vercel)
-  const isProduction = import.meta.env.PROD;
-  
-  // Remove leading slash if present
+  const base = import.meta.env.VITE_API_BASE_URL?.trim();
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   
-  // In production (Vercel), prefix with /api/
-  // In development, use root path
-  return isProduction ? `/api/${cleanEndpoint}` : `/${cleanEndpoint}`;
+  if (base) {
+    // Ensure single slash between base and endpoint
+    return `${base.replace(/\/$/, '')}/${cleanEndpoint}`;
+  }
+  // Fallback to relative path for local dev
+  return `/${cleanEndpoint}`;
 };
