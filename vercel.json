@@ -23,8 +23,5 @@
       "dest": "/client/dist/$1"
     }
   ],
-  "env": {
-    "GEMINI_API_KEY": "@gemini_api_key"
-  },
   "buildCommand": "npm run client:build"
 }
