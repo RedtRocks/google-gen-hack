@@ -1,22 +1,23 @@
 """
-Vercel serverless function entry point for FastAPI app
-Uses Mangum to adapt FastAPI (ASGI) to Vercel's serverless format
+Vercel serverless function for FastAPI
+Using Mangum adapter for AWS Lambda compatibility
 """
+from mangum import Mangum
 import sys
+import os
 from pathlib import Path
 
-# Add the parent directory to Python path
-current_dir = Path(__file__).parent
-parent_dir = current_dir.parent
-sys.path.insert(0, str(parent_dir))
+# Set VERCEL environment variable
+os.environ["VERCEL"] = "1"
 
-# Import Mangum and FastAPI app
-from mangum import Mangum
+# Add parent directory to sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+# Import FastAPI app
 from main import app as fastapi_app
 
-# Create Mangum handler
-# Mangum adapts ASGI apps to work with AWS Lambda/Vercel
+# Create handler with Mangum
 handler = Mangum(fastapi_app, lifespan="off")
 
-# Export as 'app' for Vercel
+# Vercel requires 'app' or 'handler'
 app = handler

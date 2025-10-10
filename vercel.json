@@ -6,6 +6,10 @@
       "use": "@vercel/python"
     },
     {
+      "src": "api/test.py",
+      "use": "@vercel/python"
+    },
+    {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
@@ -14,6 +18,10 @@
     }
   ],
   "routes": [
+    {
+      "src": "/test",
+      "dest": "/api/test.py"
+    },
     {
       "src": "/(analyze-document|analyze-text|ask-question|save-chat|chat-history|clear-chat-history|health)",
       "dest": "/api/index.py"
