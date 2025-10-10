@@ -3,10 +3,7 @@
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
+      "use": "@vercel/python"
     },
     {
       "src": "package.json",
@@ -18,7 +15,7 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/(analyze-document|analyze-text|ask-question|save-chat|chat-history|clear-chat-history|health)",
       "dest": "/api/index.py"
     },
     {

@@ -2,8 +2,8 @@
 
 /**
  * Get the API base URL based on environment
- * In production (Vercel), API routes are prefixed with /api
- * In development, they're at the root
+ * In production (Vercel), API routes go directly to endpoints
+ * In development, they're at the root with the dev server
  */
 export const getApiUrl = (endpoint: string): string => {
   // Check if we're in production (Vercel)
@@ -12,6 +12,6 @@ export const getApiUrl = (endpoint: string): string => {
   // Remove leading slash if present
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   
-  // In production, prefix with /api/
-  return isProduction ? `/api/${cleanEndpoint}` : `/${cleanEndpoint}`;
+  // Same path for both prod and dev - Vercel routes API endpoints to serverless function
+  return `/${cleanEndpoint}`;
 };
