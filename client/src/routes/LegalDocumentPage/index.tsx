@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import styles from './styles.module.scss';
 import { getApiUrl } from '@client/utils/api';
@@ -14,6 +14,14 @@ interface AnalysisResult {
 
 export const LegalDocumentPage = () => {
   const [, setLocation] = useLocation();
+  
+  // Debug API configuration on mount
+  useEffect(() => {
+    console.log('=== API Configuration Debug ===');
+    console.log('VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+    console.log('Test URL would be:', getApiUrl('analyze-document'));
+    console.log('===============================');
+  }, []);
   
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState('');
