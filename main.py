@@ -10,15 +10,15 @@ import google.generativeai as genai
 import requests
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import PyPDF2
 from io import BytesIO
 import logging
 import re
 from dotenv import load_dotenv
+from pathlib import Path
 
 # Load environment variables from .env if present (dev convenience)
 load_dotenv()
@@ -34,9 +34,14 @@ app = FastAPI(
     version="1.1.0"
 )
 
-# Mount static files & templates
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+# Mount frontend assets if available
+FRONTEND_DIST_PATH = Path(__file__).parent / "client" / "dist"
+FRONTEND_ASSETS_PATH = FRONTEND_DIST_PATH / "assets"
+
+if FRONTEND_ASSETS_PATH.exists():
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS_PATH)), name="assets")
+else:
+    logger.warning("Frontend assets not found at %s. Run `npm run client:build` to generate them.", FRONTEND_ASSETS_PATH)
 
 # Add CORS middleware
 app.add_middleware(
@@ -49,6 +54,10 @@ app.add_middleware(
 
 # Configuration
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+
+if not GEMINI_API_KEY or GEMINI_API_KEY == "YOUR_API_KEY":
+    logger.warning("⚠️  GEMINI_API_KEY is not set or is a placeholder. Please set a valid API key to use the analysis features.")
+    logger.warning("Get your API key from: https://aistudio.google.com/app/apikey")
 
 # ==================== MODELS ====================
 
@@ -115,8 +124,16 @@ def call_gemini_api(prompt: str, api_key: str) -> str:
             result = response.json()
             if 'candidates' in result and len(result['candidates']) > 0:
                 return result['candidates'][0]['content']['parts'][0]['text']
-        return f"API error: {response.status_code}"
+        # Log detailed error for debugging
+        error_detail = ""
+        try:
+            error_detail = response.json()
+            logger.error(f"Gemini API error {response.status_code}: {error_detail}")
+        except:
+            logger.error(f"Gemini API error {response.status_code}: {response.text}")
+        return f"API error: {response.status_code}. Please check your GEMINI_API_KEY is valid."
     except Exception as e:
+        logger.error(f"API request failed: {str(e)}")
         return f"API request failed: {str(e)}"
 
 def create_analysis_prompt(text: str, document_type: str, user_role: str, complexity_level: str) -> str:
@@ -308,10 +325,27 @@ async def clear_chat_history(request: Request):
 
 # ==================== API ENDPOINTS ====================
 
+def _frontend_index_response() -> FileResponse:
+    index_path = FRONTEND_DIST_PATH / "index.html"
+    if not index_path.exists():
+        logger.error("Frontend index not found at %s", index_path)
+        raise HTTPException(status_code=500, detail="Frontend build missing. Please run npm run client:build")
+    return FileResponse(str(index_path))
+
+
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
-    """Serve the main application page (templated UI)"""
-    return templates.TemplateResponse("index.html", {"request": request})
+async def root(_: Request):
+    """Serve the main application page (SPA entry point)"""
+    return _frontend_index_response()
+
+
+@app.get("/{full_path:path}", response_class=HTMLResponse)
+async def spa_fallback(full_path: str):
+    """Serve SPA index for client-side routes while preserving API paths."""
+    api_prefixes = ("api/", "analyze-", "ask-", "save-chat", "chat-history", "clear-chat-history", "health")
+    if any(full_path.startswith(prefix) for prefix in api_prefixes):
+        raise HTTPException(status_code=404, detail="Endpoint not found")
+    return _frontend_index_response()
 
 @app.post("/analyze-document", response_model=DocumentAnalysisResponse)
 async def analyze_document(

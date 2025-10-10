@@ -1,0 +1,35 @@
+.Markdown {
+  ul,
+  ol {
+    li {
+      margin-left: 2rem;
+    }
+  }
+
+  blockquote {
+    border-left: 0.2rem solid var(--jade-10);
+    padding: 0.25rem 0 0.25rem 0.75rem;
+  }
+
+  code {
+    padding: 0.125rem 0.25rem;
+    background: var(--jade-2);
+    color: var(--jade-11);
+    font-weight: 500;
+  }
+
+  pre:has(code) {
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    background: var(--jade-2);
+    color: var(--jade-11);
+    font-weight: 500;
+
+    code {
+      background: unset;
+      color: unset;
+      font-weight: inherit;
+      padding: 0;
+    }
+  }
+}

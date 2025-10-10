@@ -12,6 +12,13 @@ if ! command -v gcloud &> /dev/null; then
     exit 1
 fi
 
+# Ensure Node.js toolchain is available for frontend build
+if ! command -v npm &> /dev/null; then
+    echo "❌ Node.js (npm) is required to build the frontend. Please install it first:"
+    echo "   https://nodejs.org/en/download/package-manager"
+    exit 1
+fi
+
 # Check if user is logged in
 if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep -q .; then
     echo "❌ Please login to Google Cloud first:"
@@ -28,6 +35,12 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 echo "📋 Using project: $PROJECT_ID"
+
+echo "🛠️ Installing frontend dependencies (npm install --legacy-peer-deps)..."
+npm install --legacy-peer-deps
+
+echo "🛠️ Building frontend (npm run client:build)..."
+npm run client:build
 
 # Check for API key
 if [ -z "$GEMINI_API_KEY" ]; then

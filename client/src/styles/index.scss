@@ -1,0 +1,113 @@
+@use "./utils.scss" as *;
+@import "./fonts.scss";
+
+@import '@radix-ui/colors/gray.css';
+@import '@radix-ui/colors/mint.css';
+@import '@radix-ui/colors/jade.css';
+@import '@radix-ui/colors/blue.css';
+@import '@radix-ui/colors/red.css';
+@import '@radix-ui/colors/tomato.css';
+
+* {
+  outline-color: var(--jade-10);
+
+  &,
+  &::after,
+  &::before {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  &::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #999;
+  }
+}
+
+pre > div {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #ffffff59;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #eee;
+  }
+}
+
+:root {
+  font-family: 'Work Sans', 'Mulish', 'Seravek', 'Gill Sans Nova', 'Ubuntu', 'Calibri', 'DejaVu Sans', 'source-sans-pro', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.5;
+
+  font-synthesis: none;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-size-adjust: 100%;
+  font-size-adjust: 100%;
+
+  @include mobile {
+    font-size: 14px;
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #ffffff;
+  color: var(--gray-12);
+  
+  --text-primary: var(--gray-12);
+  --text-secondary: var(--gray-11);
+  --bg-primary: #ffffff;
+  --bg-secondary: var(--gray-2);
+  --border-color: var(--gray-6);
+  --accent-primary: var(--blue-9);
+}
+
+#root {
+  height: 100%;
+  max-height: 100%;
+}
+
+code,
+pre {
+  font-family: 'Source Code Pro', Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  font-size: 0.9rem;
+}
+
+pre {
+  white-space: pre-wrap;
+}

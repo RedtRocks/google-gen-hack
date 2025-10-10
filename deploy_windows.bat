@@ -13,6 +13,15 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+REM Check if npm is installed
+where npm >nul 2>nul
+if %errorlevel% neq 0 (
+    echo ❌ Node.js (npm) is required to build the frontend. Please install it first:
+    echo    https://nodejs.org/en/download/
+    pause
+    exit /b 1
+)
+
 REM Check if user is logged in
 for /f %%i in ('gcloud auth list --filter=status:ACTIVE --format="value(account)"') do set ACTIVE_ACCOUNT=%%i
 if "%ACTIVE_ACCOUNT%"=="" (
@@ -32,6 +41,22 @@ if "%PROJECT_ID%"=="" (
 )
 
 echo 📋 Using project: %PROJECT_ID%
+
+echo 🛠️ Installing frontend dependencies (npm install --legacy-peer-deps)...
+npm install --legacy-peer-deps
+if %errorlevel% neq 0 (
+    echo ❌ Failed to install frontend dependencies.
+    pause
+    exit /b 1
+)
+
+echo 🛠️ Building frontend (npm run client:build)...
+npm run client:build
+if %errorlevel% neq 0 (
+    echo ❌ Frontend build failed.
+    pause
+    exit /b 1
+)
 
 REM Check for API key
 if "%GEMINI_API_KEY%"=="" (

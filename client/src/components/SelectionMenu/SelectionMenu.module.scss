@@ -1,0 +1,35 @@
+@use "../../styles/utils.scss" as *;
+
+
+.SelectionMenu {
+  user-select: none;
+  max-width: min(90vw, 450px);
+  overflow: hidden;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--gray-3);
+  border-radius: 0.5rem;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  gap: 1px;
+
+  button {
+    padding: 0.4rem;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    transition: 0.1s ease-in-out;
+    font-size: 0.9rem;
+    background: #ffffff;
+
+    @include hover {
+      background: var(--jade-2);
+      color: var(--jade-11);
+    }
+
+    &:last-child:not(:nth-child(2n)) {
+      grid-column: 1/3;
+    }
+  }
+}

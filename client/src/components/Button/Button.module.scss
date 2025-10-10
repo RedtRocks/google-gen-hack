@@ -1,0 +1,131 @@
+@use "../../styles/utils.scss" as *;
+
+.Button {
+  box-sizing: border-box;
+  white-space: nowrap;
+  font-weight: 400;
+  font-family: inherit;
+  font-size: 1rem;
+  text-align: left;
+  border-radius: .25rem;
+  border: none;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  align-items: center;
+  outline: none;
+
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background-color ease-in-out 0.15s, color ease-in-out 0.15s, border ease-in-out 0.15s;
+
+  &:not(:disabled) {
+    cursor: pointer;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--jade-10);
+  }
+
+  &.normal,
+  &.borderless,
+  &.primary,
+  &.danger {
+    --color-btn-background: white;
+    --color-btn-border: var(--gray-4);
+    --color-btn-background-hover: var(--gray-2);
+    --color-btn-background-loading: var(--gray-3);
+
+    background-color: var(--color-btn-background);
+    color: inherit;
+    border: 1px solid var(--color-btn-border);
+
+    @include hover {
+      &:not(.loading):not(:disabled) {
+        background-color: var(--color-btn-background-hover);
+      }
+    }
+  }
+
+  &.borderless {
+    --color-btn-border: transparent;
+    --color-btn-background: transparent;
+  }
+
+
+  &.primary {
+    --color-btn-background: var(--jade-10);
+    --color-btn-border: var(--jade-4);
+    --color-btn-background-hover: var(--jade-9);
+    --color-btn-background-loading: var(--jade-9);
+    color: white;
+  }
+  &.danger {
+    --color-btn-background: var(--tomato-10);
+    --color-btn-border: var(--tomato-4);
+    --color-btn-background-hover: var(--tomato-9);
+    --color-btn-background-loading: var(--tomato-9);
+    color: white;
+  }
+
+  &.small {
+    padding: 0.125rem 0.25rem;
+
+    &.onlyIcon {
+      padding: 0.125rem;
+    }
+
+    .icon {
+      width: 1rem;
+      height: auto;
+    }
+  }
+
+  &.medium {
+    padding: 0.35rem 0.75rem;
+
+    &.onlyIcon {
+      padding: 0.35rem;
+    }
+
+    .icon {
+      width: 1.25rem;
+      height: auto;
+    }
+  } 
+
+  &.large {
+    padding: 0.75rem 1.5rem;
+
+    &.onlyIcon {
+      padding: 0.75rem;
+
+      .icon {
+        width: 1.5rem;
+      }
+    }
+
+    .icon {
+      width: 1.25rem;
+      height: auto;
+    }
+  }
+
+  &.text {
+    background: transparent;
+    padding: 0 !important;
+    color: var(--jade-11);
+  }
+
+  &.loading, &:disabled {
+    --color-btn-background: var(--gray-3);
+    --color-btn-border: transparent;
+    color: inherit !important;
+    cursor: not-allowed;
+  }
+
+  &.withIcon {}
+
+  
+}

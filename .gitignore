@@ -71,10 +71,67 @@ docker-compose.*.yml
 .gcloud/
 .cloudbuild/
 
+# === Node.js / Frontend ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+
+# Package manager locks (keep package-lock.json but ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# Vite / bundler cache
+.vite/
+.cache/
+.parcel-cache/
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# TypeScript
+*.tsbuildinfo
+
+# Next.js
+.next/
+
+# === Bun ===
+# Keep bun.lockb for this project since it uses Bun
+
+# === Testing ===
+coverage/
+*.lcov
+.nyc_output
+
+# === Temporary files ===
+*.tmp
+*.temp
+tmp/
+temp/
+
+# === Backup files ===
+*.bak
+*.backup
+*.old
+
+# === Project specific ===
+chat_history.json
+uploads/
+static/uploads/
+test_api_responses/
+
 # Misc
 .cache/
 .terraform/
-node_modules/
 
 # Keep these repo files tracked (examples in this repo):
 # app.yaml
@@ -82,3 +139,7 @@ node_modules/
 # main.py
 # requirements.txt
 # deploy.sh / deploy_windows.bat
+# bun.lockb
+# package.json
+# client/
+makyo/

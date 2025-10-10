@@ -1,4 +1,32 @@
-# 🏛️ Legal Document Demystifier
+# 🏛## What it does
+- Upload a PDF or paste text; we extract text (PyPDF2 for PDFs)
+-## Folder guide
+```
+main.py                 # FastAPI app and endpoints (serves React SPA)
+client/                 # React frontend (Vite, TypeScript)
+  src/
+    routes/
+      LegalDocumentPage/  # Main legal document analysis page
+requirements.txt        # Python dependencies
+Dockerfile, app.yaml, cloudbuild.yaml
+scripts/                # Helper scripts (frontend build helpers)
+backup_frontend/        # Original Jinja2 templates (preserved for reference)
+```
+
+## Notes
+- The UI is a custom React app designed specifically for legal document analysis
+- Chat history shows previous Q&A and can be cleared per session
+- PDF extraction uses PyPDF2's text; image-only PDFs won't be OCR'd
+- Build the frontend with `npm run client:build` whenever static assets need to be refreshedctured analysis: summary, key points, risks, recommendations, simple explanation
+- Ask follow-up questions grounded in the uploaded content, with confidence level and supporting snippets
+- Keep a local chat history per session (no DB required)
+
+## Tech stack
+- Backend: FastAPI, Uvicorn, requests
+- AI: Google Gemini (via HTTPS REST call)
+- Parsing: PyPDF2
+- Frontend: React/Vite app (TypeScript, custom legal document analysis UI)
+- Tooling: npm + Vite build pipeline, python-dotenv; Docker & GCP configs includedment Demystifier
 
 AI app to turn dense legal docs into clear, actionable insights with follow‑up Q&A. Built with FastAPI and Google Gemini.
 
@@ -12,40 +40,67 @@ AI app to turn dense legal docs into clear, actionable insights with follow‑up
 - Backend: FastAPI, Uvicorn, requests
 - AI: Google Gemini (via HTTPS REST call)
 - Parsing: PyPDF2
-- Frontend: Jinja2 templates, vanilla JS, CSS (uniform dark theme)
-- Env: python‑dotenv; optional Docker and GCP configs included
+- Frontend: Makyo React/Vite app (TypeScript, Radix UI, TanStack Query)
+- Tooling: npm + Vite build pipeline, python-dotenv; Docker & GCP configs included
 
 ## Run locally
-Prereqs: Python 3.10+, a Gemini API key
+Prereqs: Python 3.10+, Node.js 18+, a Gemini API key.
 
-1) Install deps
+### 1) Get a Gemini API Key
+Visit https://aistudio.google.com/app/apikey and create a free API key.
+
+### 2) Set up environment variables
+```powershell
+# Copy the example file
+copy .env.example .env
+```
+Then edit `.env` and replace `your-gemini-api-key-here` with your actual API key.
+
+**OR** set it directly in PowerShell:
+```powershell
+$env:GEMINI_API_KEY="your-actual-api-key"
+```
+
+### 3) Install Python dependencies
 ```powershell
 pip install -r requirements.txt
 ```
 
-2) Set environment variable (Windows PowerShell)
+### 4) Install frontend dependencies & build once (outputs to `client/dist`)
 ```powershell
-$env:GEMINI_API_KEY="your-api-key"
+npm install --legacy-peer-deps
+npm run client:build
 ```
 
-3) Start the server
+> Tip: for iterative UI work run `npm run client` in a second terminal (Vite dev server on http://localhost:8441). The FastAPI backend continues to run on http://localhost:8080.
+
+3) Set environment variables (Windows PowerShell)
+```powershell
+$env:GEMINI_API_KEY="your-api-key"
+# Optional Makyo settings
+$env:MAKYO_API_TOKEN="changeme"
+$env:MAKYO_OLLAMA_HOST="http://host.docker.internal:11434"  # or unset if not using Ollama
+```
+
+4) Start the backend
 ```powershell
 python main.py
 ```
 
-Open http://localhost:8080
+Open http://localhost:8080. FastAPI now serves the built React SPA.
 
 ## Configuration
 - GEMINI_API_KEY (required): Google Generative Language API key
 - PORT (optional, default 8080)
 
 ## Endpoints
-- GET /               → UI (upload, analysis, Q&A)
+- GET /               → React SPA entry point (Legal Document Demystifier UI)
+- GET /assets/*       → Hashed static assets served from Vite build output
 - POST /analyze-document  → file upload (PDF/TXT); returns JSON analysis + document_id
 - POST /analyze-text      → raw text; returns JSON analysis + document_id
 - POST /ask-question      → question + document_id or document_text; returns answer, relevant_sections, confidence_level
-- GET /chat-history       → session chat history
 - POST /save-chat         → persist chat in memory for session
+- GET /chat-history       → session chat history
 - POST /clear-chat-history → clear session chat
 - GET /health             → health probe
 
@@ -58,19 +113,23 @@ Responses from Gemini are coerced to strict JSON. If parsing fails, we return a 
 - Provide your own API key via environment variable
 
 ## Deploy
-- Dockerfile, app.yaml, and cloudbuild.yaml are provided for Cloud Run/App Engine. Set GEMINI_API_KEY in the environment when deploying.
+- Dockerfile now performs a multi-stage build (Node → Python) so the React assets are bundled automatically.
+- `deploy.sh` / `deploy_windows.bat` install Node deps, build the frontend, then call the existing GCP deployment flow.
+- `cloudbuild.yaml` deploys the same container; provide `_GEMINI_API_KEY` substitution or set GEMINI_API_KEY in the target environment.
 
 ## Folder guide
 ```
-main.py                 # FastAPI app and endpoints
-templates/              # UI templates (layout, index)
-static/css/style.css    # Dark theme styles
-static/js/app.js        # Frontend logic (upload, results, Q&A, chat)
-requirements.txt        # Dependencies
+main.py                 # FastAPI app and endpoints (serves React SPA)
+client/                 # Makyo React frontend (Vite, TypeScript)
+server/                 # Makyo server code (available for future integration)
+shared/                 # Shared TypeScript types used by the frontend/server
+requirements.txt        # Python dependencies
 Dockerfile, app.yaml, cloudbuild.yaml
+scripts/                # Helper scripts (frontend build helpers)
 ```
 
 ## Notes
-- The UI is now a uniform dark, blackish palette
+- The UI is now powered by Makyo’s modern React experience (dark theme, personas, snippets, etc.)
 - Chat history shows previous Q&A and can be cleared per session
-- PDF extraction uses PyPDF2’s text; image‑only PDFs won’t be OCR’d
+- PDF extraction uses PyPDF2’s text; image-only PDFs won’t be OCR’d
+- Build the frontend with `npm run client:build` whenever static assets need to be refreshed
