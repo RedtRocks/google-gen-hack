@@ -334,20 +334,6 @@ def _frontend_index_response() -> FileResponse:
     return FileResponse(str(index_path))
 
 
-@app.get("/", response_class=HTMLResponse)
-async def root(_: Request):
-    """Serve the main application page (SPA entry point)"""
-    return _frontend_index_response()
-
-
-@app.get("/{full_path:path}", response_class=HTMLResponse)
-async def spa_fallback(full_path: str):
-    """Serve SPA index for client-side routes while preserving API paths."""
-    api_prefixes = ("api/", "analyze-", "ask-", "save-chat", "chat-history", "clear-chat-history", "health")
-    if any(full_path.startswith(prefix) for prefix in api_prefixes):
-        raise HTTPException(status_code=404, detail="Endpoint not found")
-    return _frontend_index_response()
-
 @app.post("/analyze-document", response_model=DocumentAnalysisResponse)
 async def analyze_document(
     file: UploadFile = File(...),
@@ -492,6 +478,17 @@ async def ask_question(request: QuestionRequest):
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+
+@app.get("/", response_class=HTMLResponse)
+async def root(_: Request):
+    """Serve the main application page (SPA entry point)"""
+    return _frontend_index_response()
+
+@app.get("/{full_path:path}", response_class=HTMLResponse)
+async def spa_fallback(full_path: str):
+    """Serve SPA index for client-side routes while preserving API paths."""
+    # This catches all unmatched routes and serves the frontend
+    return _frontend_index_response()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))

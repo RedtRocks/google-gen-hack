@@ -1,4 +1,73 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+eggs
+.eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+.venv
+venv
+ENV
+env
+
+# Node
 node_modules
+npm-debug.log
+yarn-error.log
+.npm
 makyo
-.env.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
 .env
+.env.local
+.env.development
+
+# Documentation
+*.md
+docs/
+
+# Tests
+tests/
+test_*.py
+*.test.ts
+
+# Build artifacts
+*.log
+.cache
+
+# Misc
+*.bak
+*.tmp
+
+# Azure
+.azure
+azure-pipelines.yml

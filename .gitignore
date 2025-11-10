@@ -1,14 +1,21 @@
+# ===================================================================
+# Git Ignore - Legal Document Demystifier
+# ===================================================================
 
-# === OS ===
+# === OS Files ===
 .DS_Store
 Thumbs.db
 desktop.ini
+*.swp
+*.swo
+*~
 
-# === IDEs / editors ===
+# === IDEs / Editors ===
 .vscode/
 .idea/
 *.sublime-workspace
 *.sublime-project
+.vs/
 
 # === Python ===
 __pycache__/
@@ -16,6 +23,7 @@ __pycache__/
 *$py.class
 *.pyo
 *.pyd
+.Python
 
 # Virtual environments
 env/
@@ -24,6 +32,7 @@ ENV/
 .venv/
 env.bak/
 venv.bak/
+pythonenv*/
 
 # Packaging / distribution
 build/
@@ -32,9 +41,11 @@ dist/
 *.egg
 pip-wheel-metadata/
 wheels/
+*.whl
 
 # Installer logs
 pip-log.txt
+pip-delete-this-directory.txt
 
 # Unit tests / coverage
 .pytest_cache/
@@ -42,6 +53,10 @@ pip-log.txt
 .coverage.*
 htmlcov/
 coverage.xml
+*.cover
+.hypothesis/
+.tox/
+nosetests.xml
 
 # Test artifacts / reports
 test_results/
@@ -53,23 +68,23 @@ logs/
 
 # Database
 *.sqlite3
+*.db
 instance/
 
-# Secrets / environment files
+# === Secrets / Environment files ===
 .env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
 .env.*
+!.env.example
 *.pem
 *.key
 secrets.*
 credentials.json
-
-# Docker
-docker-compose.override.yml
-docker-compose.*.yml
-
-# Cloud / CI
-.gcloud/
-.cloudbuild/
+.azure/
 
 # === Node.js / Frontend ===
 node_modules/
@@ -78,16 +93,19 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
+package-lock.json
 
 # Build outputs
 dist/
 dist-ssr/
 build/
 out/
+client/dist/
 
-# Package manager locks (keep package-lock.json but ignore others)
+# Package manager locks
 yarn.lock
 pnpm-lock.yaml
+bun.lockb
 
 # Vite / bundler cache
 .vite/
@@ -104,8 +122,18 @@ pnpm-lock.yaml
 # Next.js
 .next/
 
-# === Bun ===
-# Keep bun.lockb for this project since it uses Bun
+# === Docker ===
+docker-compose.override.yml
+docker-compose.*.yml
+
+# === Cloud Deployment Configs (with secrets) ===
+.gcloud/
+.cloudbuild/
+app.yaml
+cloudbuild.yaml
+vercel.json
+.vercelignore
+render.yaml
 
 # === Testing ===
 coverage/
@@ -122,6 +150,8 @@ temp/
 *.bak
 *.backup
 *.old
+*_backup/
+backup_*/
 
 # === Project specific ===
 chat_history.json
@@ -129,17 +159,36 @@ uploads/
 static/uploads/
 test_api_responses/
 
-# Misc
+# Old/redundant folders
+makyo/
+api/
+server/
+shared/
+backup_frontend/
+
+# Old/redundant files
+Aug*.py
+*SOLUTION*.md
+*QUICKSTART*.md
+README_NEW.md
+uml.xml
+use-case-diagram.md
+runtime.txt
+
+# === Misc ===
 .cache/
 .terraform/
+*.zip
 
-# Keep these repo files tracked (examples in this repo):
-# app.yaml
-# Dockerfile
-# main.py
-# requirements.txt
-# deploy.sh / deploy_windows.bat
-# bun.lockb
-# package.json
-# client/
-makyo/
+# ===================================================================
+# Keep these files tracked:
+# - Dockerfile
+# - main.py
+# - requirements.txt
+# - deploy_windows.bat
+# - deploy_azure.ps1
+# - package.json
+# - client/ (source files)
+# - AZURE_*.md (deployment docs)
+# - .env.example
+# ===================================================================

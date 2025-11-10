@@ -113,9 +113,48 @@ Responses from Gemini are coerced to strict JSON. If parsing fails, we return a 
 - Provide your own API key via environment variable
 
 ## Deploy
+
+### Deploy to Azure (Recommended)
+
+The easiest way to deploy this application to production is using Microsoft Azure App Service.
+
+**Quick Deploy:**
+```powershell
+# 1. Build frontend
+npm run client:build
+
+# 2. Login to Azure
+az login
+
+# 3. Deploy using automated script
+.\deploy_azure.ps1 -ResourceGroup "legal-demystifier-rg" -AppName "your-unique-app-name"
+```
+
+**Documentation:**
+- 📖 **Full Guide**: See [`AZURE_DEPLOYMENT_GUIDE.md`](AZURE_DEPLOYMENT_GUIDE.md) for comprehensive deployment instructions
+- ✅ **Checklist**: See [`AZURE_CHECKLIST.md`](AZURE_CHECKLIST.md) for pre-deployment checklist
+- ⚡ **Quick Reference**: See [`AZURE_QUICK_REFERENCE.md`](AZURE_QUICK_REFERENCE.md) for essential commands
+
+**Requirements:**
+- Azure account (free tier available)
+- Azure CLI installed
+- Gemini API key
+
+### Deploy to Google Cloud Platform
+
 - Dockerfile now performs a multi-stage build (Node → Python) so the React assets are bundled automatically.
 - `deploy.sh` / `deploy_windows.bat` install Node deps, build the frontend, then call the existing GCP deployment flow.
 - `cloudbuild.yaml` deploys the same container; provide `_GEMINI_API_KEY` substitution or set GEMINI_API_KEY in the target environment.
+
+### Deploy with Docker
+
+```powershell
+# Build the image
+docker build -t legal-demystifier .
+
+# Run the container
+docker run -p 8080:8080 -e GEMINI_API_KEY="your-api-key" legal-demystifier
+```
 
 ## Folder guide
 ```

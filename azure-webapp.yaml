@@ -1,0 +1,32 @@
+# Azure Web App Configuration
+# This file documents the required settings for Azure App Service deployment
+
+runtime:
+  name: python
+  version: "3.11"
+
+startup_command: "python main.py"
+
+app_settings:
+  - name: GEMINI_API_KEY
+    value: "YOUR_GEMINI_API_KEY_HERE"
+  - name: PORT
+    value: "8080"
+  - name: WEBSITES_PORT
+    value: "8080"
+  - name: SCM_DO_BUILD_DURING_DEPLOYMENT
+    value: "true"
+  - name: ENABLE_ORYX_BUILD
+    value: "true"
+
+health_check:
+  path: /health
+  interval: 300
+
+scaling:
+  min_instances: 1
+  max_instances: 10
+  rules:
+    - metric_name: CpuPercentage
+      threshold: 70
+      scale_action: increase
