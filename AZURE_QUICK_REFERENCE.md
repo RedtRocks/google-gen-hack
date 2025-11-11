@@ -22,6 +22,7 @@ az login
 ## 📋 Essential Information
 
 ### Your App Details
+
 - **App Name**: Choose a unique name (e.g., `legal-demystifier-yourname`)
 - **URL**: `https://YOUR-APP-NAME.azurewebsites.net`
 - **Resource Group**: `legal-demystifier-rg` (or your choice)
@@ -29,6 +30,7 @@ az login
 - **Region**: East US (or your choice)
 
 ### Required Settings
+
 ```powershell
 GEMINI_API_KEY=your_api_key_here
 WEBSITES_PORT=8080
@@ -40,6 +42,7 @@ SCM_DO_BUILD_DURING_DEPLOYMENT=true
 ## 🔧 Essential Commands
 
 ### Deploy
+
 ```powershell
 # Automated deployment
 .\deploy_azure.ps1 -ResourceGroup "legal-demystifier-rg" -AppName "your-app-name"
@@ -49,6 +52,7 @@ az webapp up --resource-group legal-demystifier-rg --name your-app-name --runtim
 ```
 
 ### Configure API Key
+
 ```powershell
 az webapp config appsettings set `
   --resource-group legal-demystifier-rg `
@@ -57,6 +61,7 @@ az webapp config appsettings set `
 ```
 
 ### View Logs
+
 ```powershell
 # Stream live logs
 az webapp log tail --resource-group legal-demystifier-rg --name your-app-name
@@ -66,11 +71,13 @@ az webapp log download --resource-group legal-demystifier-rg --name your-app-nam
 ```
 
 ### Restart App
+
 ```powershell
 az webapp restart --resource-group legal-demystifier-rg --name your-app-name
 ```
 
 ### Check Status
+
 ```powershell
 az webapp show --resource-group legal-demystifier-rg --name your-app-name --query state
 ```
@@ -80,6 +87,7 @@ az webapp show --resource-group legal-demystifier-rg --name your-app-name --quer
 ## 🐛 Quick Troubleshooting
 
 ### App Won't Start
+
 ```powershell
 # Check startup command
 az webapp config show --resource-group legal-demystifier-rg --name your-app-name
@@ -92,6 +100,7 @@ az webapp config appsettings set --resource-group legal-demystifier-rg --name yo
 ```
 
 ### Frontend Not Loading
+
 ```powershell
 # Rebuild frontend
 npm run client:build
@@ -104,6 +113,7 @@ az webapp up --resource-group legal-demystifier-rg --name your-app-name
 ```
 
 ### API Key Issues
+
 ```powershell
 # Check if API key is set
 az webapp config appsettings list --resource-group legal-demystifier-rg --name your-app-name
@@ -116,12 +126,12 @@ az webapp config appsettings set --resource-group legal-demystifier-rg --name yo
 
 ## 💰 Pricing Quick Reference
 
-| Tier | Monthly Cost | Resources | Best For |
-|------|--------------|-----------|----------|
-| F1 (Free) | $0 | 60min/day, 1GB RAM | Testing |
-| B1 (Basic) | ~$13 | 1 core, 1.75GB RAM | Small apps |
-| S1 (Standard) | ~$70 | 1 core, 1.75GB RAM, auto-scale | Production |
-| P1V2 (Premium) | ~$80 | 1 core, 3.5GB RAM | High performance |
+| Tier           | Monthly Cost | Resources                      | Best For         |
+| -------------- | ------------ | ------------------------------ | ---------------- |
+| F1 (Free)      | $0           | 60min/day, 1GB RAM             | Testing          |
+| B1 (Basic)     | ~$13         | 1 core, 1.75GB RAM             | Small apps       |
+| S1 (Standard)  | ~$70         | 1 core, 1.75GB RAM, auto-scale | Production       |
+| P1V2 (Premium) | ~$80         | 1 core, 3.5GB RAM              | High performance |
 
 ---
 

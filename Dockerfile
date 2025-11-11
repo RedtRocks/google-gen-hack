@@ -13,6 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY main.py ./
+COPY storage_service.py ./
 
 # Copy pre-built frontend
 COPY client/dist/ ./client/dist/

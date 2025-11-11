@@ -20,6 +20,9 @@ import re
 from dotenv import load_dotenv
 from pathlib import Path
 
+# Import Azure Storage Service
+from storage_service import storage_service
+
 # Load environment variables from .env if present (dev convenience)
 load_dotenv()
 
@@ -350,6 +353,25 @@ async def analyze_document(
         # Read file content
         file_content = await file.read()
         
+        # Store file in Azure Blob Storage if enabled
+        storage_info = None
+        if storage_service.is_enabled():
+            try:
+                storage_info = storage_service.upload_file(
+                    file_content=file_content,
+                    filename=file.filename,
+                    content_type=file.content_type or "application/pdf",
+                    metadata={
+                        "document_type": document_type,
+                        "user_role": user_role,
+                        "complexity_level": complexity_level
+                    }
+                )
+                logger.info(f"File stored in Azure Blob Storage: {storage_info['blob_name']}")
+            except Exception as storage_error:
+                logger.warning(f"Failed to store file in Azure Storage: {str(storage_error)}")
+                # Continue with analysis even if storage fails
+        
         # Extract text based on file type
         if file.filename.lower().endswith('.pdf'):
             text = extract_text_from_pdf(file_content)
@@ -362,8 +384,12 @@ async def analyze_document(
         # Generate document ID
         document_id = str(uuid.uuid4())
         
-        # Store document for future questions
+        # Store document for future questions (in memory)
         document_storage[document_id] = text
+        
+        # Also store the blob name if file was uploaded to storage
+        if storage_info:
+            document_storage[f"{document_id}_blob"] = storage_info['blob_name']
         
         # Create analysis prompt
         prompt = create_analysis_prompt(text, document_type, user_role, complexity_level)
@@ -373,7 +399,12 @@ async def analyze_document(
 
         parsed = parse_analysis_response(response)
         if parsed:
-            return DocumentAnalysisResponse(document_id=document_id, **parsed)
+            # Add storage info to response if available
+            result = DocumentAnalysisResponse(document_id=document_id, **parsed)
+            if storage_info:
+                # Store additional info that can be retrieved via new endpoint
+                document_storage[f"{document_id}_storage_info"] = storage_info
+            return result
         else:
             logger.warning("Falling back – could not parse JSON analysis")
             return DocumentAnalysisResponse(
@@ -477,7 +508,99 @@ async def ask_question(request: QuestionRequest):
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+    storage_status = "enabled" if storage_service.is_enabled() else "disabled"
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "storage": storage_status
+    }
+
+# ==================== STORAGE MANAGEMENT ENDPOINTS ====================
+
+@app.get("/storage/files")
+async def list_stored_files(prefix: str = "", max_results: int = 100):
+    """List all files stored in Azure Blob Storage"""
+    if not storage_service.is_enabled():
+        raise HTTPException(status_code=503, detail="Storage service not configured")
+    
+    try:
+        files = storage_service.list_files(prefix=prefix, max_results=max_results)
+        return {
+            "files": files,
+            "count": len(files),
+            "storage_enabled": True
+        }
+    except Exception as e:
+        logger.error(f"Error listing files: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list files: {str(e)}")
+
+@app.get("/storage/file/{blob_name:path}")
+async def get_file_info(blob_name: str):
+    """Get information about a specific stored file"""
+    if not storage_service.is_enabled():
+        raise HTTPException(status_code=503, detail="Storage service not configured")
+    
+    try:
+        metadata = storage_service.get_file_metadata(blob_name)
+        # Generate temporary download URL (valid for 24 hours)
+        download_url = storage_service.get_file_url(blob_name, expiry_hours=24)
+        
+        return {
+            "metadata": metadata,
+            "download_url": download_url,
+            "url_expiry_hours": 24
+        }
+    except Exception as e:
+        logger.error(f"Error getting file info: {str(e)}")
+        raise HTTPException(status_code=404, detail=f"File not found: {str(e)}")
+
+@app.get("/storage/document/{document_id}")
+async def get_document_storage_info(document_id: str):
+    """Get storage information for a specific analyzed document"""
+    storage_info_key = f"{document_id}_storage_info"
+    
+    if storage_info_key not in document_storage:
+        raise HTTPException(status_code=404, detail="Document not found or not stored in cloud storage")
+    
+    storage_info = document_storage[storage_info_key]
+    
+    # Generate temporary download URL
+    if storage_service.is_enabled():
+        try:
+            download_url = storage_service.get_file_url(storage_info['blob_name'], expiry_hours=24)
+            storage_info['download_url'] = download_url
+            storage_info['url_expiry_hours'] = 24
+        except Exception as e:
+            logger.warning(f"Could not generate download URL: {str(e)}")
+    
+    return storage_info
+
+@app.delete("/storage/file/{blob_name:path}")
+async def delete_stored_file(blob_name: str):
+    """Delete a file from Azure Blob Storage"""
+    if not storage_service.is_enabled():
+        raise HTTPException(status_code=503, detail="Storage service not configured")
+    
+    try:
+        success = storage_service.delete_file(blob_name)
+        return {
+            "success": success,
+            "message": f"File {blob_name} deleted successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error deleting file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")
+
+@app.get("/storage/status")
+async def storage_status():
+    """Check if storage service is enabled and configured"""
+    return {
+        "enabled": storage_service.is_enabled(),
+        "container_name": storage_service.container_name if storage_service.is_enabled() else None,
+        "message": "Storage service is active" if storage_service.is_enabled() else "Storage service not configured. Set AZURE_STORAGE_CONNECTION_STRING to enable."
+    }
+
+# ==================== END STORAGE ENDPOINTS ====================
 
 @app.get("/", response_class=HTMLResponse)
 async def root(_: Request):

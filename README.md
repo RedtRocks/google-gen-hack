@@ -1,6 +1,8 @@
 # 🏛## What it does
+
 - Upload a PDF or paste text; we extract text (PyPDF2 for PDFs)
--## Folder guide
+  -## Folder guide
+
 ```
 main.py                 # FastAPI app and endpoints (serves React SPA)
 client/                 # React frontend (Vite, TypeScript)
@@ -14,6 +16,7 @@ backup_frontend/        # Original Jinja2 templates (preserved for reference)
 ```
 
 ## Notes
+
 - The UI is a custom React app designed specifically for legal document analysis
 - Chat history shows previous Q&A and can be cleared per session
 - PDF extraction uses PyPDF2's text; image-only PDFs won't be OCR'd
@@ -22,6 +25,7 @@ backup_frontend/        # Original Jinja2 templates (preserved for reference)
 - Keep a local chat history per session (no DB required)
 
 ## Tech stack
+
 - Backend: FastAPI, Uvicorn, requests
 - AI: Google Gemini (via HTTPS REST call)
 - Parsing: PyPDF2
@@ -31,12 +35,14 @@ backup_frontend/        # Original Jinja2 templates (preserved for reference)
 AI app to turn dense legal docs into clear, actionable insights with follow‑up Q&A. Built with FastAPI and Google Gemini.
 
 ## What it does
+
 - Upload a PDF or paste text; we extract text (PyPDF2 for PDFs)
 - Generate a structured analysis: summary, key points, risks, recommendations, simple explanation
 - Ask follow‑up questions grounded in the uploaded content, with confidence level and supporting snippets
 - Keep a local chat history per session (no DB required)
 
 ## Tech stack
+
 - Backend: FastAPI, Uvicorn, requests
 - AI: Google Gemini (via HTTPS REST call)
 - Parsing: PyPDF2
@@ -44,29 +50,36 @@ AI app to turn dense legal docs into clear, actionable insights with follow‑up
 - Tooling: npm + Vite build pipeline, python-dotenv; Docker & GCP configs included
 
 ## Run locally
+
 Prereqs: Python 3.10+, Node.js 18+, a Gemini API key.
 
 ### 1) Get a Gemini API Key
+
 Visit https://aistudio.google.com/app/apikey and create a free API key.
 
 ### 2) Set up environment variables
+
 ```powershell
 # Copy the example file
 copy .env.example .env
 ```
+
 Then edit `.env` and replace `your-gemini-api-key-here` with your actual API key.
 
 **OR** set it directly in PowerShell:
+
 ```powershell
 $env:GEMINI_API_KEY="your-actual-api-key"
 ```
 
 ### 3) Install Python dependencies
+
 ```powershell
 pip install -r requirements.txt
 ```
 
 ### 4) Install frontend dependencies & build once (outputs to `client/dist`)
+
 ```powershell
 npm install --legacy-peer-deps
 npm run client:build
@@ -74,7 +87,8 @@ npm run client:build
 
 > Tip: for iterative UI work run `npm run client` in a second terminal (Vite dev server on http://localhost:8441). The FastAPI backend continues to run on http://localhost:8080.
 
-3) Set environment variables (Windows PowerShell)
+3. Set environment variables (Windows PowerShell)
+
 ```powershell
 $env:GEMINI_API_KEY="your-api-key"
 # Optional Makyo settings
@@ -82,7 +96,8 @@ $env:MAKYO_API_TOKEN="changeme"
 $env:MAKYO_OLLAMA_HOST="http://host.docker.internal:11434"  # or unset if not using Ollama
 ```
 
-4) Start the backend
+4. Start the backend
+
 ```powershell
 python main.py
 ```
@@ -90,24 +105,28 @@ python main.py
 Open http://localhost:8080. FastAPI now serves the built React SPA.
 
 ## Configuration
+
 - GEMINI_API_KEY (required): Google Generative Language API key
 - PORT (optional, default 8080)
 
 ## Endpoints
-- GET /               → React SPA entry point (Legal Document Demystifier UI)
-- GET /assets/*       → Hashed static assets served from Vite build output
-- POST /analyze-document  → file upload (PDF/TXT); returns JSON analysis + document_id
-- POST /analyze-text      → raw text; returns JSON analysis + document_id
-- POST /ask-question      → question + document_id or document_text; returns answer, relevant_sections, confidence_level
-- POST /save-chat         → persist chat in memory for session
-- GET /chat-history       → session chat history
+
+- GET / → React SPA entry point (Legal Document Demystifier UI)
+- GET /assets/\* → Hashed static assets served from Vite build output
+- POST /analyze-document → file upload (PDF/TXT); returns JSON analysis + document_id
+- POST /analyze-text → raw text; returns JSON analysis + document_id
+- POST /ask-question → question + document_id or document_text; returns answer, relevant_sections, confidence_level
+- POST /save-chat → persist chat in memory for session
+- GET /chat-history → session chat history
 - POST /clear-chat-history → clear session chat
-- GET /health             → health probe
+- GET /health → health probe
 
 ## How answers are structured
+
 Responses from Gemini are coerced to strict JSON. If parsing fails, we return a graceful fallback with the raw snippet and guidance to retry.
 
 ## Security & privacy
+
 - Documents and chats are stored in memory only (per process)
 - No external storage; clear chat endpoint included
 - Provide your own API key via environment variable
@@ -119,6 +138,7 @@ Responses from Gemini are coerced to strict JSON. If parsing fails, we return a 
 The easiest way to deploy this application to production is using Microsoft Azure App Service.
 
 **Quick Deploy:**
+
 ```powershell
 # 1. Build frontend
 npm run client:build
@@ -131,11 +151,13 @@ az login
 ```
 
 **Documentation:**
+
 - 📖 **Full Guide**: See [`AZURE_DEPLOYMENT_GUIDE.md`](AZURE_DEPLOYMENT_GUIDE.md) for comprehensive deployment instructions
 - ✅ **Checklist**: See [`AZURE_CHECKLIST.md`](AZURE_CHECKLIST.md) for pre-deployment checklist
 - ⚡ **Quick Reference**: See [`AZURE_QUICK_REFERENCE.md`](AZURE_QUICK_REFERENCE.md) for essential commands
 
 **Requirements:**
+
 - Azure account (free tier available)
 - Azure CLI installed
 - Gemini API key
@@ -157,6 +179,7 @@ docker run -p 8080:8080 -e GEMINI_API_KEY="your-api-key" legal-demystifier
 ```
 
 ## Folder guide
+
 ```
 main.py                 # FastAPI app and endpoints (serves React SPA)
 client/                 # Makyo React frontend (Vite, TypeScript)
@@ -168,6 +191,7 @@ scripts/                # Helper scripts (frontend build helpers)
 ```
 
 ## Notes
+
 - The UI is now powered by Makyo’s modern React experience (dark theme, personas, snippets, etc.)
 - Chat history shows previous Q&A and can be cleared per session
 - PDF extraction uses PyPDF2’s text; image-only PDFs won’t be OCR’d

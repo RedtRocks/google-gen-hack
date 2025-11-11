@@ -9,18 +9,22 @@ Complete guide to deploy the Legal Document Demystifier application to Microsoft
 Before deploying to Azure, ensure you have:
 
 1. **Azure Account**
+
    - Sign up at [azure.microsoft.com](https://azure.microsoft.com/free/)
    - Free tier includes: 750 hours of B1 compute, 5GB storage, 1TB bandwidth
 
 2. **Azure CLI**
+
    - Download from: https://aka.ms/installazurecliwindows
    - Verify installation: `az --version`
 
 3. **Node.js** (for building frontend)
+
    - Version 18+ recommended
    - Download from: https://nodejs.org/
 
 4. **Python 3.11+**
+
    - Already required for local development
 
 5. **Git** (optional, for Git-based deployment)
@@ -50,12 +54,14 @@ cd "c:\Computer\Coding\genhack - Copy"
 ```
 
 **Parameters:**
+
 - `ResourceGroup`: Name for your Azure resource group (e.g., "legal-demystifier-rg")
 - `AppName`: Unique name for your web app (e.g., "legal-demystifier-app")
 - `Location`: Azure region (e.g., "East US", "West Europe", "Southeast Asia")
 - `Sku`: Pricing tier (B1=Basic, S1=Standard, P1V2=Premium)
 
 The script will:
+
 - ✅ Check Azure CLI installation
 - ✅ Login to Azure
 - ✅ Create resource group
@@ -95,6 +101,7 @@ az appservice plan create `
 ```
 
 **Pricing Tiers:**
+
 - **Free (F1)**: Free, 60 min/day CPU, 1GB RAM, 1GB storage
 - **Basic (B1)**: ~$13/month, 1 core, 1.75GB RAM, 10GB storage
 - **Standard (S1)**: ~$70/month, 1 core, 1.75GB RAM, 50GB storage
@@ -162,15 +169,18 @@ Deploy using the Azure Portal web interface.
 #### Steps:
 
 1. **Login to Azure Portal**
+
    - Go to: https://portal.azure.com/
    - Sign in with your Azure account
 
 2. **Create Web App**
+
    - Click "Create a resource"
    - Search for "Web App"
    - Click "Create"
 
 3. **Configure Basic Settings**
+
    - **Subscription**: Select your subscription
    - **Resource Group**: Create new "legal-demystifier-rg"
    - **Name**: "legal-demystifier-app" (must be unique)
@@ -180,6 +190,7 @@ Deploy using the Azure Portal web interface.
    - **Region**: East US (or preferred)
 
 4. **Configure App Service Plan**
+
    - Click "Create new"
    - Name: "legal-demystifier-plan"
    - Pricing tier: B1 (or preferred)
@@ -187,6 +198,7 @@ Deploy using the Azure Portal web interface.
    - Click "Create"
 
 5. **Configure Application Settings**
+
    - Go to your Web App
    - Navigate to: Configuration → Application settings
    - Add new settings:
@@ -196,6 +208,7 @@ Deploy using the Azure Portal web interface.
    - Click "Save"
 
 6. **Configure Startup Command**
+
    - Navigate to: Configuration → General settings
    - Startup Command: `python main.py`
    - Click "Save"
@@ -203,22 +216,24 @@ Deploy using the Azure Portal web interface.
 7. **Deploy Code**
 
    **Option A: Using Git**
+
    ```powershell
    # Get deployment credentials from Azure Portal
    # Settings → Deployment Center → Local Git/FTPS credentials
-   
+
    # Add Azure remote
    git remote add azure <git-clone-url>
-   
+
    # Push to Azure
    git push azure main
    ```
 
    **Option B: Using ZIP Deploy**
+
    ```powershell
    # Create deployment package
    Compress-Archive -Path * -DestinationPath deploy.zip
-   
+
    # Deploy using Azure CLI
    az webapp deployment source config-zip `
      --resource-group legal-demystifier-rg `
@@ -227,6 +242,7 @@ Deploy using the Azure Portal web interface.
    ```
 
    **Option C: Using VS Code**
+
    - Install "Azure App Service" extension
    - Right-click on your Web App
    - Select "Deploy to Web App"
@@ -308,6 +324,7 @@ az webapp log tail --resource-group legal-demystifier-rg --name legal-demystifie
 Visit: `https://legal-demystifier-app.azurewebsites.net`
 
 Test endpoints:
+
 - Health check: `/health`
 - Homepage: `/`
 - Upload document and test analysis
@@ -395,12 +412,14 @@ az webapp log download --resource-group legal-demystifier-rg --name legal-demyst
 #### 1. Application Won't Start
 
 **Check:**
+
 - Startup command is set: `python main.py`
 - `WEBSITES_PORT=8080` is configured
 - Python runtime is 3.11
 - Dependencies are installed
 
 **Solution:**
+
 ```powershell
 az webapp config set --resource-group legal-demystifier-rg --name legal-demystifier-app --startup-file "python main.py"
 az webapp config appsettings set --resource-group legal-demystifier-rg --name legal-demystifier-app --settings WEBSITES_PORT=8080
@@ -409,10 +428,12 @@ az webapp config appsettings set --resource-group legal-demystifier-rg --name le
 #### 2. Frontend Not Loading
 
 **Check:**
+
 - Frontend is built: `client/dist` folder exists
 - Static files are included in deployment
 
 **Solution:**
+
 ```powershell
 # Rebuild frontend locally
 npm run client:build
@@ -424,10 +445,12 @@ az webapp up --resource-group legal-demystifier-rg --name legal-demystifier-app
 #### 3. API Key Not Working
 
 **Check:**
+
 - `GEMINI_API_KEY` is set in Application Settings
 - API key is valid (test at https://aistudio.google.com/)
 
 **Solution:**
+
 ```powershell
 az webapp config appsettings set `
   --resource-group legal-demystifier-rg `
@@ -438,6 +461,7 @@ az webapp config appsettings set `
 #### 4. Out of Memory
 
 **Solution:** Upgrade to higher tier
+
 ```powershell
 az appservice plan update --name legal-demystifier-plan --resource-group legal-demystifier-rg --sku S1
 ```
@@ -463,26 +487,31 @@ az webapp deployment list-publishing-profiles --resource-group legal-demystifier
 ## 💰 Cost Estimation
 
 ### Free Tier (F1)
+
 - **Cost**: Free
 - **Limitations**: 60 min/day CPU time, 1GB RAM, shared infrastructure
 - **Best for**: Testing, demos
 
 ### Basic Tier (B1)
+
 - **Cost**: ~$13/month
 - **Resources**: 1 core, 1.75GB RAM, 10GB storage
 - **Best for**: Small production apps, low traffic
 
 ### Standard Tier (S1)
+
 - **Cost**: ~$70/month
 - **Resources**: 1 core, 1.75GB RAM, 50GB storage, auto-scaling
 - **Best for**: Production apps, medium traffic
 
 ### Premium Tier (P1V2)
+
 - **Cost**: ~$80/month
 - **Resources**: 1 core, 3.5GB RAM, 250GB storage, advanced features
 - **Best for**: High-performance production apps
 
 **Additional Costs:**
+
 - Application Insights: Free tier (5GB/month)
 - Custom domain: Free (if you own domain)
 - SSL certificate: Free (Azure-managed)
@@ -502,33 +531,33 @@ name: Deploy to Azure
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-      
+          python-version: "3.11"
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
-      
+          node-version: "20"
+
       - name: Build frontend
         run: |
           npm install
           npm run client:build
-      
+
       - name: Deploy to Azure
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'legal-demystifier-app'
+          app-name: "legal-demystifier-app"
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
 ```
 
@@ -547,6 +576,7 @@ The `azure-pipelines.yml` file is already configured in your project. Set up in 
 ## 🛡️ Security Best Practices
 
 ### 1. Secure API Key
+
 ```powershell
 # Store API key in Azure Key Vault
 az keyvault create --name legal-demystifier-kv --resource-group legal-demystifier-rg --location "East US"
@@ -560,11 +590,13 @@ az webapp config appsettings set `
 ```
 
 ### 2. Enable HTTPS Only
+
 ```powershell
 az webapp update --resource-group legal-demystifier-rg --name legal-demystifier-app --https-only true
 ```
 
 ### 3. Configure IP Restrictions
+
 ```powershell
 az webapp config access-restriction add `
   --resource-group legal-demystifier-rg `
