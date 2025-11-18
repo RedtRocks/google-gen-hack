@@ -7,7 +7,7 @@ import os
 import uuid
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
-from azure.storage.blob import BlobServiceClient, BlobSasPermissions, generate_blob_sas
+from azure.storage.blob import BlobServiceClient, BlobSasPermissions, generate_blob_sas, ContentSettings
 import logging
 
 logger = logging.getLogger(__name__)
@@ -99,9 +99,9 @@ class AzureStorageService:
             blob_client.upload_blob(
                 file_content,
                 overwrite=True,
-                content_settings={
-                    "content_type": content_type
-                },
+                content_settings=ContentSettings(
+                    content_type=content_type
+                ),
                 metadata=blob_metadata
             )
             

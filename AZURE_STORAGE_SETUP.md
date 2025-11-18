@@ -7,6 +7,7 @@ This guide shows you how to set up Azure Blob Storage to store all uploaded PDF 
 ## 🎯 What This Feature Does
 
 When users upload PDF files to your Legal Document Demystifier app:
+
 - ✅ Files are automatically stored in Azure Blob Storage
 - ✅ Each file gets a unique name with timestamp
 - ✅ Metadata is stored (filename, upload time, file size, etc.)
@@ -77,6 +78,7 @@ az storage container list `
 4. Click **"Create"**
 
 **Settings:**
+
 - **Storage account name**: `legaldemystifierstorage`
 - **Region**: Same as your web app (e.g., East US)
 - **Performance**: Standard
@@ -85,6 +87,7 @@ az storage container list `
 5. Click **"Review + Create"** → **"Create"**
 
 **Create Container:**
+
 1. Go to your storage account
 2. Click **"Containers"** in the left menu
 3. Click **"+ Container"**
@@ -108,6 +111,7 @@ az storage account show-connection-string `
 ```
 
 **Or from Azure Portal:**
+
 1. Go to your Storage Account
 2. Click **"Access keys"** (under Security + networking)
 3. Copy the **Connection string** from key1
@@ -120,6 +124,7 @@ notepad .env
 ```
 
 Add these lines:
+
 ```env
 # Azure Storage Configuration
 AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=legaldemystifierstorage;AccountKey=your-key-here;EndpointSuffix=core.windows.net
@@ -149,6 +154,7 @@ python main.py
 ```
 
 Open http://localhost:8080 and test:
+
 1. Upload a PDF file
 2. The file should be stored in Azure Blob Storage
 3. Check storage status: http://localhost:8080/storage/status
@@ -171,11 +177,13 @@ az webapp config appsettings set `
 ```
 
 **Replace:**
+
 - `legal-demystifier-rg` with your resource group name
 - `legal-demystifier-yourname` with your web app name
 - `your-connection-string-here` with your actual connection string
 
 **Or using Azure Portal:**
+
 1. Go to your Web App
 2. Click **"Configuration"** (under Settings)
 3. Click **"+ New application setting"**
@@ -216,6 +224,7 @@ az webapp restart `
 Visit: `https://your-app-name.azurewebsites.net/storage/status`
 
 Expected response:
+
 ```json
 {
   "enabled": true,
@@ -236,6 +245,7 @@ Expected response:
 Visit: `https://your-app-name.azurewebsites.net/storage/files`
 
 You'll see all uploaded files with metadata:
+
 ```json
 {
   "files": [
@@ -275,35 +285,46 @@ You'll get file details and a temporary download URL.
 Your app now has these new endpoints:
 
 ### GET /storage/status
+
 Check if storage is enabled
+
 ```bash
 curl https://your-app.azurewebsites.net/storage/status
 ```
 
 ### GET /storage/files
+
 List all stored files
+
 ```bash
 curl https://your-app.azurewebsites.net/storage/files
 ```
 
 Query parameters:
+
 - `prefix`: Filter files (e.g., `?prefix=20251110`)
 - `max_results`: Limit results (e.g., `?max_results=50`)
 
 ### GET /storage/file/{blob_name}
+
 Get file information and download URL
+
 ```bash
 curl https://your-app.azurewebsites.net/storage/file/20251110_123456_abcd1234_contract.pdf
 ```
 
 ### GET /storage/document/{document_id}
+
 Get storage info for analyzed document
+
 ```bash
 curl https://your-app.azurewebsites.net/storage/document/your-document-id
 ```
 
 ### DELETE /storage/file/{blob_name}
+
 Delete a stored file
+
 ```bash
 curl -X DELETE https://your-app.azurewebsites.net/storage/file/20251110_123456_abcd1234_contract.pdf
 ```
@@ -357,14 +378,15 @@ az storage cors add `
 
 ### Pricing (Standard LRS - East US)
 
-| Component | Price | Usage |
-|-----------|-------|-------|
-| **Storage** | $0.018/GB/month | First 50 GB/month |
-| **Write Operations** | $0.05/10,000 ops | Uploads |
-| **Read Operations** | $0.004/10,000 ops | Downloads |
-| **List Operations** | $0.05/10,000 ops | Listing files |
+| Component            | Price             | Usage             |
+| -------------------- | ----------------- | ----------------- |
+| **Storage**          | $0.018/GB/month   | First 50 GB/month |
+| **Write Operations** | $0.05/10,000 ops  | Uploads           |
+| **Read Operations**  | $0.004/10,000 ops | Downloads         |
+| **List Operations**  | $0.05/10,000 ops  | Listing files     |
 
 **Example Monthly Cost:**
+
 - 1,000 file uploads (50 GB total): ~$1
 - 5,000 downloads: ~$0.20
 - 100 list operations: ~$0.01
@@ -472,6 +494,7 @@ This deletes files automatically after 365 days.
 ### Issue: "Storage service not configured"
 
 **Solution:**
+
 ```powershell
 # Check if environment variable is set
 az webapp config appsettings list `
@@ -489,6 +512,7 @@ az webapp config appsettings set `
 ### Issue: "Container not found"
 
 **Solution:**
+
 ```powershell
 # Create the container
 az storage container create `
@@ -500,6 +524,7 @@ az storage container create `
 ### Issue: Files not uploading
 
 **Check logs:**
+
 ```powershell
 az webapp log tail `
   --resource-group "legal-demystifier-rg" `
@@ -513,6 +538,7 @@ Look for storage-related errors.
 ## ✅ Summary
 
 You now have:
+
 - ✅ Azure Blob Storage configured
 - ✅ Files automatically stored in cloud
 - ✅ API endpoints to manage files
